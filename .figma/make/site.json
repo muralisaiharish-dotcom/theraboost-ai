@@ -1,0 +1,10 @@
+{
+  "description": "Create stunning, high-fidelity user interface designs effortlessly, tailored for designers and teams seeking to enhance their digital products.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
