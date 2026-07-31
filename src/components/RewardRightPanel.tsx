@@ -131,7 +131,7 @@ export function RewardRightPanel({ stats, onOpenReport }: RewardRightPanelProps)
                 <span className="font-bold text-xs text-gray-800">{cat.name}</span>
               </div>
               <span className="font-black text-xs text-gray-400 bg-white px-2 py-0.5 rounded-lg border border-gray-100">
-                {cat.count}
+                {(cat as any).count || (cat.name === 'All' ? 19 : 3)}
               </span>
             </div>
           ))}

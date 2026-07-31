@@ -110,3 +110,95 @@ export type AuthAction =
   | { type: 'LOGOUT' }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'UPDATE_USER'; payload: Partial<UserInfo> }
+
+// ─── Smart Reinforcement Domain Types ──────────────────────────────────────────
+
+export interface RewardHistoryEntry {
+  id: string
+  videoId?: string
+  title: string
+  category: 'Indian Culture' | 'Animals' | 'Nature' | 'Rhymes' | 'Educational Learning' | 'Motivational Kids Videos'
+  starsEarned?: number
+  watchDuration?: number // seconds
+  watchCompletion?: number // 0 to 100 percentage
+  timestamp: string
+}
+
+export interface ActivityLogEntry {
+  id: string
+  activityType: 'speech' | 'flashcard' | 'matching_game' | 'reward_video'
+  title: string
+  duration?: number // minutes
+  score?: number    // accuracy / score 0-100
+  starsEarned: number
+  timestamp: string
+}
+
+export interface MotivationScore {
+  score: number // 0 - 100
+  level: 'Excellent' | 'Good' | 'Average' | 'Needs Motivation'
+  levelColor: string
+  trendPct: number
+  suggestions: string[]
+  computedAt: string
+  breakdown: {
+    streak: number
+    sessionCompletion: number
+    rewardResponse: number
+    timeSpent: number
+    speechPractice: number
+    gamesCompleted: number
+  }
+}
+
+export interface CategoryScoreItem {
+  category: 'Indian Culture' | 'Animals' | 'Nature' | 'Rhymes' | 'Educational Learning' | 'Motivational Kids Videos'
+  confidence: number
+  reason: string
+  videoTitle: string
+  videoId: string
+}
+
+export interface AIRecommendation {
+  category: 'Indian Culture' | 'Animals' | 'Nature' | 'Rhymes' | 'Educational Learning' | 'Motivational Kids Videos'
+  confidence: number // 0-100%
+  reason: string
+  videoTitle: string
+  videoId: string
+  allScores?: CategoryScoreItem[]
+  computedAt: string
+}
+
+export interface ScheduleEntry {
+  id: string
+  title: string
+  subtitle: string
+  skill: 'Speech Practice' | 'Flash Cards' | 'Matching Games' | 'Reward Videos'
+  memoryStrength: 'Strong' | 'Medium' | 'Weak'
+  time: string
+  icon: string
+  screen: string
+  completed?: boolean
+  aiGenerated?: boolean
+  reason?: string
+}
+
+export interface AnalyticsData {
+  mostEffectiveReward: string
+  leastEffectiveReward: string
+  favouriteCategory: string
+  avgSessionTimeMinutes: number
+  activitiesCompleted: number
+  completionRate: number
+  weeklyEngagement: number[]
+  monthlyEngagement: number[]
+  totalRewardsEarned: number
+  totalStarsEarned: number
+  mostWatchedVideos: Array<{ title: string; count: number; category: string }>
+  speechAccuracyTrend: number[]
+  learningTrend: number[]
+  aiSummary: string
+  aiInsights: string[]
+  generatedAt: string
+}
+

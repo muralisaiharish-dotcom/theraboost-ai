@@ -454,3 +454,19 @@ export function WaterDropMascot() {
     </svg>
   )
 }
+
+// ── Generic Colorful SVG Thumbnail Component for Category Cards ─────────────
+export function CategoryThumbnail({ emoji, title, bgGradient }: { emoji: string; title: string; bgGradient: string }) {
+  return (
+    <div className={`w-full h-full flex flex-col items-center justify-center p-3 relative overflow-hidden select-none ${bgGradient}`}>
+      <div className="absolute top-2 left-2 w-16 h-16 rounded-full bg-white/10 blur-xl pointer-events-none" />
+      <div className="text-4xl mb-1 transform group-hover:scale-110 transition-transform duration-300 drop-shadow-md">
+        {emoji}
+      </div>
+      <div className="text-[11px] font-black text-white text-center leading-tight line-clamp-1 opacity-90">
+        {title}
+      </div>
+    </div>
+  )
+}
+

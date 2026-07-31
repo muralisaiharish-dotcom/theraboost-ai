@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
-  CONTINUE_WATCHING_VIDEOS,
-  MORE_CULTURE_VIDEOS,
+  ALL_REWARD_VIDEOS,
+  VIDEO_CATEGORIES,
   VideoItem,
 } from './RewardVideosData'
 import {
@@ -14,35 +14,81 @@ import {
   ThumbnailHoli,
   ThumbnailTemples,
   ThumbnailClassicalMusic,
+  CategoryThumbnail,
 } from './RewardVideoThumbnails'
+import { VideoPlayerModal } from './VideoPlayerModal'
+import { useApp } from '../contexts/AppContext'
+import { AIRecommendationCard } from './AIRecommendationCard'
 
 interface RewardVideosProps {
   onScoreUpdate?: (stars: number) => void
 }
 
 export function RewardVideos({ onScoreUpdate }: RewardVideosProps) {
+  const { addStars, logReward } = useApp()
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [hasClaimedStars, setHasClaimedStars] = useState(false)
+  const [lockedNotice, setLockedNotice] = useState<VideoItem | null>(null)
 
-  const filterCategories = [
-    'All',
-    'Festivals',
-    'Dance & Music',
-    'History',
-    'Monuments',
-    'Stories',
-    'Languages',
-  ]
+  // Persisted completed videos & watch progress
+  const [completedVideoIds, setCompletedVideoIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('theraboost_completed_videos')
+      return saved ? JSON.parse(saved) : []
+    } catch {
+      return []
+    }
+  })
 
-  const filteredMoreVideos =
+  const [videoProgressMap, setVideoProgressMap] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem('theraboost_video_progress')
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  const handleUpdateProgress = (videoId: string, progress: number) => {
+    setVideoProgressMap((prev) => {
+      const next = { ...prev, [videoId]: Math.max(prev[videoId] || 0, progress) }
+      try {
+        localStorage.setItem('theraboost_video_progress', JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
+
+  const handleVideoCompleted = (video: VideoItem) => {
+    if (!completedVideoIds.includes(video.id)) {
+      const updated = [...completedVideoIds, video.id]
+      setCompletedVideoIds(updated)
+      try {
+        localStorage.setItem('theraboost_completed_videos', JSON.stringify(updated))
+      } catch {}
+
+      // Log reward event in central engine (dedup, stats, reward history)
+      logReward({
+        videoId: video.id,
+        title: video.title,
+        category: video.category as import('../types').RewardHistoryEntry['category'],
+        starsEarned: video.rewardStars,
+        watchCompletion: 100,
+        timestamp: new Date().toISOString(),
+      })
+
+      addStars(video.rewardStars)
+      if (onScoreUpdate) onScoreUpdate(video.rewardStars)
+    }
+  }
+
+  const filteredVideos =
     selectedCategory === 'All'
-      ? MORE_CULTURE_VIDEOS
-      : MORE_CULTURE_VIDEOS.filter((v) => v.category === selectedCategory)
+      ? ALL_REWARD_VIDEOS
+      : ALL_REWARD_VIDEOS.filter((v) => v.category === selectedCategory)
 
-  const renderThumbnail = (type: VideoItem['thumbnailType']) => {
-    switch (type) {
+  const renderThumbnail = (video: VideoItem) => {
+    switch (video.thumbnailType) {
       case 'incredible_india':
         return <ThumbnailIncredibleIndia />
       case 'folk_dances':
@@ -59,21 +105,46 @@ export function RewardVideos({ onScoreUpdate }: RewardVideosProps) {
         return <ThumbnailTemples />
       case 'classical_music':
         return <ThumbnailClassicalMusic />
+      case 'animals_elephant':
+        return <CategoryThumbnail emoji="🐘" title="Meet Elephant" bgGradient="bg-gradient-to-tr from-emerald-700 to-teal-500" />
+      case 'animals_wild':
+        return <CategoryThumbnail emoji="🦁" title="Wild Animals" bgGradient="bg-gradient-to-tr from-amber-700 to-yellow-600" />
+      case 'animals_farm':
+        return <CategoryThumbnail emoji="🐮" title="Farm Animals" bgGradient="bg-gradient-to-tr from-green-600 to-lime-500" />
+      case 'nature_trees':
+        return <CategoryThumbnail emoji="🌳" title="Save Trees" bgGradient="bg-gradient-to-tr from-emerald-800 to-green-500" />
+      case 'nature_earth':
+        return <CategoryThumbnail emoji="🏔️" title="Mother Earth" bgGradient="bg-gradient-to-tr from-cyan-700 to-blue-500" />
+      case 'nature_ocean':
+        return <CategoryThumbnail emoji="🐬" title="Ocean Life" bgGradient="bg-gradient-to-tr from-blue-800 to-indigo-500" />
+      case 'rhymes_abc':
+        return <CategoryThumbnail emoji="🔤" title="ABC Song" bgGradient="bg-gradient-to-tr from-rose-600 to-pink-500" />
+      case 'rhymes_star':
+        return <CategoryThumbnail emoji="⭐" title="Twinkle Star" bgGradient="bg-gradient-to-tr from-indigo-900 to-purple-700" />
+      case 'rhymes_bus':
+        return <CategoryThumbnail emoji="🚌" title="Wheels Bus" bgGradient="bg-gradient-to-tr from-amber-500 to-yellow-400" />
+      case 'edu_numbers':
+        return <CategoryThumbnail emoji="🔢" title="Numbers 1-10" bgGradient="bg-gradient-to-tr from-purple-700 to-indigo-600" />
+      case 'edu_shapes':
+        return <CategoryThumbnail emoji="🔺" title="Colors & Shapes" bgGradient="bg-gradient-to-tr from-fuchsia-600 to-purple-500" />
+      case 'edu_planets':
+        return <CategoryThumbnail emoji="🪐" title="Solar System" bgGradient="bg-gradient-to-tr from-slate-900 to-indigo-900" />
+      case 'moti_habits':
+        return <CategoryThumbnail emoji="🪥" title="Good Habits" bgGradient="bg-gradient-to-tr from-teal-600 to-cyan-500" />
+      case 'moti_try':
+        return <CategoryThumbnail emoji="🏆" title="Never Give Up" bgGradient="bg-gradient-to-tr from-amber-600 to-orange-500" />
+      case 'moti_kindness':
+        return <CategoryThumbnail emoji="🤝" title="Sharing & Kindness" bgGradient="bg-gradient-to-tr from-pink-600 to-rose-400" />
       default:
-        return <ThumbnailIncredibleIndia />
+        return <CategoryThumbnail emoji="🎬" title={video.title} bgGradient="bg-gradient-to-tr from-purple-600 to-indigo-600" />
     }
   }
 
-  const handleOpenVideo = (video: VideoItem) => {
-    setActiveVideo(video)
-    setIsPlaying(true)
-    setHasClaimedStars(false)
-  }
-
-  const handleClaimReward = () => {
-    if (activeVideo && !hasClaimedStars) {
-      setHasClaimedStars(true)
-      if (onScoreUpdate) onScoreUpdate(activeVideo.rewardStars)
+  const handleCardClick = (video: VideoItem) => {
+    if (video.isLocked) {
+      setLockedNotice(video)
+    } else {
+      setActiveVideo(video)
     }
   }
 
@@ -82,7 +153,6 @@ export function RewardVideos({ onScoreUpdate }: RewardVideosProps) {
       {/* ── 1. Top Header Section ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3.5">
-          {/* Play Icon Circle */}
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/25 shrink-0">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
@@ -94,265 +164,184 @@ export function RewardVideos({ onScoreUpdate }: RewardVideosProps) {
               Reward Videos
             </h1>
             <p className="text-gray-500 text-xs font-semibold mt-1">
-              Watch fun videos and enjoy Indian culture!
+              Watch fun educational & cultural videos to earn stars!
             </p>
           </div>
         </div>
 
-        {/* Top Right Controls */}
+        {/* Top Right Stats Badge */}
         <div className="flex items-center gap-3">
-          {/* Dropdown */}
-          <div className="relative">
-            <select className="appearance-none bg-purple-50 hover:bg-purple-100/80 border border-purple-200 text-purple-900 font-extrabold text-xs px-4 py-2.5 pr-8 rounded-2xl cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-purple-400">
-              <option value="Indian Culture">Indian Culture</option>
-              <option value="Moral Stories">Moral Stories</option>
-              <option value="Fun Science">Fun Science</option>
-              <option value="Music & Rhymes">Music & Rhymes</option>
-            </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-purple-700 text-xs font-black">
-              ⌄
-            </div>
+          <div className="bg-purple-50 border border-purple-200 text-purple-900 font-extrabold text-xs px-4 py-2.5 rounded-2xl flex items-center gap-2">
+            <span>⭐</span>
+            <span>{completedVideoIds.length} / {ALL_REWARD_VIDEOS.length} Videos Completed</span>
           </div>
-
-          {/* Filter Sliders Button */}
-          <button className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-700 hover:bg-purple-100 transition-all cursor-pointer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" strokeLinecap="round" />
-            </svg>
-          </button>
         </div>
       </div>
 
-      {/* ── 2. Explore. Learn. Be Proud! Hero Banner ──────────────────────── */}
+      {/* ── Smart AI Recommendation Banner ── */}
+      <AIRecommendationCard />
+
+      {/* ── 2. Explore & Learn Hero Banner ──────────────────────── */}
       <div className="bg-gradient-to-r from-amber-100/80 via-amber-50 to-orange-100/90 border border-amber-200/90 rounded-3xl p-6 relative overflow-hidden flex items-center justify-between shadow-xs shrink-0">
         <div className="relative z-10 max-w-md">
           <h2 className="text-2xl font-black text-purple-950 tracking-tight mb-1.5">
-            Explore. Learn. Be Proud!
+            Explore. Learn. Earn Stars!
           </h2>
           <p className="text-gray-700 text-xs font-bold leading-relaxed">
-            Watch amazing videos about our incredible Indian culture. 🇮🇳 📜 ✨
+            Watch short videos on Indian Culture, Animals, Nature, Rhymes, Learning & Motivation! 🇮🇳 🐘 🌿 🎵
           </p>
         </div>
 
-        {/* Hero Artwork Graphic */}
         <div className="relative z-10 shrink-0 transform scale-95 translate-x-2">
           <HeroBannerIllustration />
         </div>
       </div>
 
-      {/* ── 3. Continue Watching Section ─────────────────────────────────── */}
+      {/* ── 3. Filter Category Pills ────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 shrink-0">
         <div className="flex items-center justify-between">
-          <h3 className="font-black text-gray-900 text-base">Continue Watching</h3>
-          <button className="text-indigo-600 hover:text-indigo-800 text-xs font-extrabold hover:underline cursor-pointer">
-            View All
-          </button>
+          <h3 className="font-black text-gray-900 text-base">Video Categories</h3>
         </div>
 
-        {/* 4 Cards Row */}
-        <div className="grid grid-cols-4 gap-4">
-          {CONTINUE_WATCHING_VIDEOS.map((video) => (
-            <div
-              key={video.id}
-              onClick={() => handleOpenVideo(video)}
-              className="bg-white rounded-2xl overflow-hidden border border-purple-100/90 shadow-2xs hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1 flex flex-col"
-            >
-              {/* Thumbnail Container */}
-              <div className="relative h-32 w-full overflow-hidden bg-gray-900">
-                {renderThumbnail(video.thumbnailType)}
-
-                {/* Center Overlay Play Icon */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xs text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-600 transition-all shadow-md">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Duration Badge Bottom Right */}
-                <div className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-black px-2 py-0.5 rounded-md backdrop-blur-xs">
-                  {video.duration}
-                </div>
-
-                {/* Bottom Progress Bar */}
-                {video.progress && (
-                  <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-700/60">
-                    <div
-                      className="h-full bg-purple-600 rounded-r-full"
-                      style={{ width: `${video.progress}%` }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Card Footer Details */}
-              <div className="p-3 flex flex-col justify-between flex-1">
-                <h4 className="font-black text-xs text-gray-900 truncate mb-1 group-hover:text-purple-700 transition-colors">
-                  {video.title}
-                </h4>
-                <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
-                  <span className="truncate max-w-[120px]">{video.subtitle}</span>
-                  <span className="text-amber-400 text-xs">⭐</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 4. More Indian Culture Videos Section ─────────────────────────── */}
-      <div className="flex flex-col gap-3 shrink-0">
-        <h3 className="font-black text-gray-900 text-base">More Indian Culture Videos</h3>
-
-        {/* Filter Category Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {filterCategories.map((cat) => {
-            const isActive = selectedCategory === cat
+          {VIDEO_CATEGORIES.map((cat) => {
+            const isActive = selectedCategory === cat.name
             return (
               <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-1.5 rounded-xl font-extrabold text-xs transition-all cursor-pointer whitespace-nowrap ${
+                key={cat.name}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={`px-4 py-2 rounded-xl font-extrabold text-xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   isActive
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'bg-purple-50/80 hover:bg-purple-100/80 text-purple-700 border border-purple-100'
                 }`}
               >
-                {cat}
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
               </button>
             )
           })}
         </div>
+      </div>
 
-        {/* 4 Cards Grid */}
+      {/* ── 4. Main Videos Grid ─────────────────────────────────────────── */}
+      <div className="flex flex-col gap-3 shrink-0">
+        <h3 className="font-black text-gray-900 text-base">
+          {selectedCategory === 'All' ? 'All Reward Videos' : selectedCategory} ({filteredVideos.length})
+        </h3>
+
         <div className="grid grid-cols-4 gap-4">
-          {filteredMoreVideos.map((video) => (
-            <div
-              key={video.id}
-              onClick={() => handleOpenVideo(video)}
-              className="bg-white rounded-2xl overflow-hidden border border-purple-100/90 shadow-2xs hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1 flex flex-col"
-            >
-              {/* Thumbnail Container */}
-              <div className="relative h-32 w-full overflow-hidden bg-gray-900">
-                {renderThumbnail(video.thumbnailType)}
+          {filteredVideos.map((video) => {
+            const isCompleted = completedVideoIds.includes(video.id)
+            const progress = videoProgressMap[video.id] || (isCompleted ? 100 : 0)
 
-                {/* Play Button */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                  <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xs text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-600 transition-all shadow-md">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+            return (
+              <div
+                key={video.id}
+                onClick={() => handleCardClick(video)}
+                className={`bg-white rounded-2xl overflow-hidden border p-2 shadow-2xs hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1 flex flex-col justify-between relative ${
+                  isCompleted ? 'border-emerald-200 bg-emerald-50/20' : 'border-purple-100/90'
+                }`}
+              >
+                {/* Thumbnail Container */}
+                <div className="relative h-32 w-full overflow-hidden bg-gray-900 rounded-xl mb-2">
+                  {renderThumbnail(video)}
+
+                  {/* Lock Overlay */}
+                  {video.isLocked ? (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white">
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg mb-1">
+                        🔒
+                      </div>
+                      <span className="text-[10px] font-black tracking-wide text-amber-300">LOCKED</span>
+                    </div>
+                  ) : (
+                    /* Center Overlay Play Icon */
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-xs text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-purple-600 transition-all shadow-md">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Watched ✓ Badge (Req 9) */}
+                  {isCompleted && (
+                    <div className="absolute top-2 left-2 bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 z-10">
+                      ✓ Watched
+                    </div>
+                  )}
+
+                  {/* Duration Badge Bottom Right */}
+                  <div className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-black px-2 py-0.5 rounded-md backdrop-blur-xs">
+                    {video.duration}
+                  </div>
+
+                  {/* Watch Progress Bar */}
+                  {progress > 0 && (
+                    <div className="absolute bottom-0 inset-x-0 h-1.5 bg-gray-700/60">
+                      <div
+                        className="h-full bg-purple-500 rounded-r-full transition-all"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer Details */}
+                <div className="p-1 flex flex-col justify-between flex-1">
+                  <h4 className="font-black text-xs text-gray-900 truncate mb-1 group-hover:text-purple-700 transition-colors">
+                    {video.title}
+                  </h4>
+                  <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
+                    <span className="truncate max-w-[110px]">{video.category}</span>
+                    <div className={`flex items-center gap-1 font-black text-xs ${isCompleted ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {isCompleted ? (
+                        <span>✓ Done</span>
+                      ) : (
+                        <>
+                          <span>⭐</span>
+                          <span>+{video.rewardStars}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {/* Duration Badge */}
-                <div className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-black px-2 py-0.5 rounded-md backdrop-blur-xs">
-                  {video.duration}
-                </div>
               </div>
-
-              {/* Card Footer Details */}
-              <div className="p-3 flex flex-col justify-between flex-1">
-                <h4 className="font-black text-xs text-gray-900 truncate mb-1 group-hover:text-purple-700 transition-colors">
-                  {video.title}
-                </h4>
-                <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium">
-                  <span className="truncate max-w-[110px]">{video.subtitle}</span>
-                  <div className="flex items-center gap-1 font-black text-amber-600 text-xs">
-                    <span>⭐</span>
-                    <span>{video.rewardStars}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
-      {/* ── 5. Interactive Video Modal Player ────────────────────────────── */}
+      {/* Video Modal Player Component */}
       {activeVideo && (
-        <div className="fixed inset-0 bg-purple-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-fadeIn select-none">
-          <div className="bg-white rounded-3xl overflow-hidden max-w-2xl w-full border border-purple-100 shadow-2xl flex flex-col animate-scaleUp">
-            {/* Modal Header */}
-            <div className="px-6 py-4 bg-purple-50/80 border-b border-purple-100 flex items-center justify-between">
-              <div>
-                <h3 className="font-black text-purple-950 text-base leading-none mb-1">
-                  {activeVideo.title}
-                </h3>
-                <span className="text-gray-500 text-xs font-semibold">
-                  {activeVideo.subtitle}
-                </span>
-              </div>
-              <button
-                onClick={() => setActiveVideo(null)}
-                className="w-8 h-8 rounded-full bg-white hover:bg-rose-50 text-gray-400 hover:text-rose-600 flex items-center justify-center font-black text-sm border border-gray-200 transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
+        <VideoPlayerModal
+          video={activeVideo}
+          onClose={() => setActiveVideo(null)}
+          onCompleted={handleVideoCompleted}
+          isAlreadyCompleted={completedVideoIds.includes(activeVideo.id)}
+          onUpdateProgress={handleUpdateProgress}
+        />
+      )}
+
+      {/* Locked Video Notice Modal */}
+      {lockedNotice && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl animate-scaleUp border border-purple-100">
+            <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mx-auto mb-3">
+              🔒
             </div>
-
-            {/* Video Player Display Screen */}
-            <div className="relative aspect-video w-full bg-gray-950 flex items-center justify-center overflow-hidden">
-              {renderThumbnail(activeVideo.thumbnailType)}
-
-              {/* Video Play Overlay */}
-              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-16 h-16 rounded-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center text-2xl shadow-xl transition-transform hover:scale-110 cursor-pointer mb-2"
-                >
-                  {isPlaying ? '⏸' : '▶'}
-                </button>
-                <span className="text-white/80 font-bold text-xs">
-                  {isPlaying ? 'Playing Video...' : 'Paused'}
-                </span>
-              </div>
-
-              {/* Bottom Video Controls Bar */}
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col gap-2">
-                {/* Progress Bar */}
-                <div className="w-full h-1.5 bg-white/30 rounded-full overflow-hidden cursor-pointer">
-                  <div className="h-full bg-purple-500 rounded-full w-[65%]" />
-                </div>
-
-                <div className="flex items-center justify-between text-white text-xs font-bold">
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setIsPlaying(!isPlaying)}>
-                      {isPlaying ? '⏸' : '▶'}
-                    </button>
-                    <span>03:15 / {activeVideo.duration}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>🔊</span>
-                    <span>⛶</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Bottom Rewards Claim Footer */}
-            <div className="p-5 bg-white flex items-center justify-between border-t border-gray-100">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">⭐</span>
-                <div>
-                  <div className="font-black text-gray-900 text-sm">Earn 10 Stars</div>
-                  <div className="text-gray-400 text-xs font-semibold">Watch till the end to unlock!</div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleClaimReward}
-                disabled={hasClaimedStars}
-                className={`px-6 py-2.5 rounded-2xl font-extrabold text-xs transition-all cursor-pointer ${
-                  hasClaimedStars
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200 cursor-default'
-                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:scale-105 active:scale-95'
-                }`}
-              >
-                {hasClaimedStars ? '✓ Stars Claimed!' : 'Claim +10 Stars ⭐'}
-              </button>
-            </div>
+            <h3 className="text-lg font-black text-gray-900 mb-1">{lockedNotice.title} is Locked</h3>
+            <p className="text-xs text-gray-600 font-semibold mb-5 leading-relaxed">
+              {lockedNotice.unlockRequirement || 'Complete more speech practice cards to unlock this special reward video!'}
+            </p>
+            <button
+              onClick={() => setLockedNotice(null)}
+              className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs cursor-pointer shadow-md transition-transform active:scale-95"
+            >
+              Got It!
+            </button>
           </div>
         </div>
       )}

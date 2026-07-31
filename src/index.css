@@ -203,3 +203,10 @@ body {
 /* ── Safe Area Support (iPhone notch) ──────────────────────────────────────── */
 .safe-top { padding-top: env(safe-area-inset-top, 0px); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ── Notification Panel Drop Down ──────────────────────────────────────────── */
+@keyframes slideDownFade {
+  from { transform: translateY(-8px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-slideDownFade { animation: slideDownFade 0.25s ease-out both; }

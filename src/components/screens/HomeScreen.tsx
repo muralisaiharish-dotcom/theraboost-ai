@@ -1,5 +1,6 @@
 import { useApp } from '../../contexts/AppContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { AIRecommendationCard } from '../AIRecommendationCard'
 
 export function HomeScreen() {
   const { navigate, state } = useApp()
@@ -141,6 +142,10 @@ export function HomeScreen() {
           ))}
         </div>
       </div>
+
+      {/* ── Smart AI Recommendation Card ── */}
+      <AIRecommendationCard />
+
 
       {/* ── Continue Learning ── */}
       <div>

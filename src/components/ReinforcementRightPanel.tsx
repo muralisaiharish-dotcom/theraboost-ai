@@ -1,4 +1,5 @@
 import { UserStats } from '../types'
+import { MotivationScoreCard } from './MotivationScoreCard'
 
 interface ReinforcementRightPanelProps {
   stats: UserStats
@@ -34,7 +35,11 @@ export function ReinforcementRightPanel({ stats, userName }: ReinforcementRightP
 
   return (
     <aside className="w-72 flex flex-col gap-4 shrink-0 h-full overflow-y-auto pr-1 select-none">
+      {/* ── Live Motivation Score ── */}
+      <MotivationScoreCard compact />
+
       {/* ── Schedule Summary ─────────────────────────────────────────────── */}
+
       <div className="bg-white rounded-3xl p-5 border border-purple-100 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-black text-gray-900 text-sm">Schedule Summary</h3>

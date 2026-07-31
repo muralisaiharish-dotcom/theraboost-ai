@@ -1,97 +1,33 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useApp } from '../../contexts/AppContext'
+import { generateSchedule, getAIScheduleInsight } from '../../engine/ScheduleEngine'
+import { AIRecommendationCard } from '../AIRecommendationCard'
 
-type MemoryStrength = 'Strong' | 'Medium' | 'Weak'
 type ScheduleTab = 'Today' | 'Tomorrow' | 'This Week'
 
-interface ScheduleActivity {
-  id: string
-  title: string
-  subtitle: string
-  memoryStrength: MemoryStrength
-  time: string
-  icon: string
-  screen: string
-  completed?: boolean
-}
-
-const SCHEDULE_DATA: Record<ScheduleTab, ScheduleActivity[]> = {
-  Today: [
-    {
-      id: 'sp-1',
-      title: 'Speech Practice – Pronunciation',
-      subtitle: 'Review 15 difficult words',
-      memoryStrength: 'Strong',
-      time: '10:00 AM',
-      icon: '🎙️',
-      screen: 'Speech Practice',
-    },
-    {
-      id: 'fc-1',
-      title: 'Flash Cards – Daily Review',
-      subtitle: 'Fruits, Animals & Objects',
-      memoryStrength: 'Medium',
-      time: '02:00 PM',
-      icon: '🃏',
-      screen: 'Flash Cards',
-    },
-    {
-      id: 'mg-1',
-      title: 'Matching Games – Concepts',
-      subtitle: 'Match shapes & colors',
-      memoryStrength: 'Weak',
-      time: '05:30 PM',
-      icon: '🧩',
-      screen: 'Matching Games',
-    },
-    {
-      id: 'rv-1',
-      title: 'Reward Videos',
-      subtitle: 'Watch and relax!',
-      memoryStrength: 'Strong',
-      time: '07:00 PM',
-      icon: '🎬',
-      screen: 'Reward Videos',
-    },
-  ],
-  Tomorrow: [
-    {
-      id: 'sp-2',
-      title: 'Speech Practice – Fluency',
-      subtitle: 'Practice short sentences',
-      memoryStrength: 'Medium',
-      time: '10:00 AM',
-      icon: '🎙️',
-      screen: 'Speech Practice',
-    },
-    {
-      id: 'fc-2',
-      title: 'Flash Cards – Transport',
-      subtitle: 'Cars, Planes, Trains',
-      memoryStrength: 'Weak',
-      time: '03:00 PM',
-      icon: '🃏',
-      screen: 'Flash Cards',
-    },
-  ],
-  'This Week': [
-    {
-      id: 'sp-3',
-      title: 'Weekly Speech Challenge',
-      subtitle: '20 sentences high score target',
-      memoryStrength: 'Strong',
-      time: 'Friday 04:00 PM',
-      icon: '🏆',
-      screen: 'Speech Practice',
-    },
-  ],
-}
-
 export function ReinforcementScreen() {
-  const { navigate } = useApp()
+  const { navigate, state, aiRecommendation } = useApp()
   const [activeTab, setActiveTab] = useState<ScheduleTab>('Today')
 
-  const activities = SCHEDULE_DATA[activeTab] || SCHEDULE_DATA.Today
+  const activities = useMemo(() => {
+    return generateSchedule(
+      {
+        activityLog: state.activityLog,
+        rewardHistory: state.rewardHistory,
+        speechScore: state.speechScore,
+        cardsLearned: state.stats.cardsLearned,
+        dayStreak: state.stats.dayStreak,
+        preferredCategory: aiRecommendation.category,
+        weeklyCompleted: state.stats.weeklyCompleted,
+        weeklyGoal: state.stats.weeklyGoal,
+      },
+      activeTab,
+    )
+  }, [state.activityLog, state.rewardHistory, state.speechScore, state.stats, aiRecommendation.category, activeTab])
+
+  const insightText = useMemo(() => {
+    return getAIScheduleInsight(activities, 'Rahul')
+  }, [activities])
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4 pb-6 animate-slideUp">
@@ -109,11 +45,14 @@ export function ReinforcementScreen() {
         <div className="text-3xl animate-float">🤖</div>
         <div>
           <div className="text-xs font-black">AI Learning Assistant</div>
-          <div className="text-[10px] text-purple-200 font-semibold mt-0.5">
-            Based on recent accuracy, we recommend focusing on <strong>Matching Games</strong> today!
+          <div className="text-[10px] text-purple-200 font-semibold mt-0.5 leading-relaxed">
+            {insightText}
           </div>
         </div>
       </div>
+
+      {/* Smart AI Recommended Reward */}
+      <AIRecommendationCard compact />
 
       {/* Tabs */}
       <div className="flex gap-1.5 bg-white p-1 rounded-2xl border border-purple-100 shadow-2xs">
@@ -139,15 +78,15 @@ export function ReinforcementScreen() {
             key={item.id}
             className="bg-white rounded-2xl border border-purple-100 p-3.5 shadow-2xs flex items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center text-xl shrink-0">
                 {item.icon}
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-xs text-gray-900">{item.title}</h3>
+                  <h3 className="font-black text-xs text-gray-900 truncate">{item.title}</h3>
                   <span
-                    className={`text-[8px] font-black px-1.5 py-0.5 rounded-md ${
+                    className={`text-[8px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${
                       item.memoryStrength === 'Weak'
                         ? 'bg-red-100 text-red-700'
                         : item.memoryStrength === 'Medium'
@@ -158,7 +97,7 @@ export function ReinforcementScreen() {
                     {item.memoryStrength} Priority
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{item.subtitle}</p>
+                <p className="text-[10px] text-gray-500 font-semibold mt-0.5 truncate">{item.subtitle}</p>
                 <div className="text-[9px] font-bold text-gray-400 mt-1">⏰ {item.time}</div>
               </div>
             </div>

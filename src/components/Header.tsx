@@ -1,3 +1,7 @@
+import { useState, useRef } from 'react'
+import { useApp } from '../contexts/AppContext'
+import { NotificationPanel } from './NotificationPanel'
+
 interface HeaderProps {
   starsEarned: number
   sessionProgress: number
@@ -7,10 +11,21 @@ interface HeaderProps {
 }
 
 export function Header({ starsEarned, sessionProgress, onOpenSettings, userName, userAvatar }: HeaderProps) {
+  const { state, markNotificationsRead } = useApp()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const bellRef = useRef<HTMLDivElement>(null)
+
   // Circular ring stroke calculation
   const radius = 14
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (sessionProgress / 100) * circumference
+
+  const handleBellClick = () => {
+    setNotifOpen((prev) => {
+      if (!prev) markNotificationsRead()
+      return !prev
+    })
+  }
 
   return (
     <header className="flex items-center justify-between px-8 py-3.5 bg-white/80 backdrop-blur-md border-b border-purple-100 shrink-0 z-30">
@@ -95,15 +110,27 @@ export function Header({ starsEarned, sessionProgress, onOpenSettings, userName,
           </div>
         </div>
 
-        {/* Notification Bell Button */}
-        <button className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center relative hover:border-purple-200 transition-all cursor-pointer shadow-xs">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6C4DE6" strokeWidth="2.5">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
-            3
-          </div>
-        </button>
+        {/* Notification Bell Button — relative container for the dropdown */}
+        <div className="relative" ref={bellRef}>
+          <button
+            id="notification-bell"
+            onClick={handleBellClick}
+            aria-label="Open notifications"
+            className="w-10 h-10 rounded-2xl bg-white border border-gray-100 flex items-center justify-center relative hover:border-purple-200 transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6C4DE6" strokeWidth="2.5">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {state.notificationCount > 0 && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white">
+                {state.notificationCount}
+              </div>
+            )}
+          </button>
+
+          {/* Notification Panel Dropdown */}
+          {notifOpen && <NotificationPanel onClose={() => setNotifOpen(false)} />}
+        </div>
 
         {/* Settings Button */}
         <button

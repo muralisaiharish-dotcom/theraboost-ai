@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useApp } from '../../contexts/AppContext'
 
 export function SettingsScreen() {
   const { logout, state: authState } = useAuth()
+  const { resetFlashcardProgress } = useApp()
   const user = authState.user!
 
   const [sound, setSound] = useState(true)
@@ -10,6 +12,7 @@ export function SettingsScreen() {
   const [language, setLanguage] = useState('English')
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showResetProgressModal, setShowResetProgressModal] = useState(false)
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4 pb-6 animate-slideUp">
@@ -118,6 +121,22 @@ export function SettingsScreen() {
         <div className="h-px bg-gray-100" />
 
         <button
+          onClick={() => setShowResetProgressModal(true)}
+          className="flex items-center justify-between py-1.5 cursor-pointer text-left text-purple-700"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-lg">🔄</span>
+            <div>
+              <div className="text-xs font-black">Reset Flash Card Progress</div>
+              <div className="text-[10px] font-semibold text-gray-400">Parent/Admin: Clear completed cards to re-earn stars</div>
+            </div>
+          </div>
+          <span className="font-black text-xs">›</span>
+        </button>
+
+        <div className="h-px bg-gray-100" />
+
+        <button
           onClick={() => setShowDeleteModal(true)}
           className="flex items-center justify-between py-1.5 cursor-pointer text-left text-red-600"
         >
@@ -191,6 +210,34 @@ export function SettingsScreen() {
                 className="flex-1 py-2 rounded-xl bg-red-600 text-white text-xs font-bold shadow-xs cursor-pointer"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Reset Flash Card Progress Modal */}
+      {showResetProgressModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-xs flex flex-col gap-4 shadow-2xl animate-scaleUp">
+            <h3 className="text-base font-black text-purple-900">Reset Flash Card Progress</h3>
+            <p className="text-xs text-gray-500 font-semibold">
+              Parent/Admin Control: Resetting will clear completed cards so stars can be re-earned.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowResetProgressModal(false)}
+                className="flex-1 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  resetFlashcardProgress()
+                  setShowResetProgressModal(false)
+                }}
+                className="flex-1 py-2 rounded-xl bg-purple-600 text-white text-xs font-bold shadow-xs cursor-pointer"
+              >
+                Confirm Reset
               </button>
             </div>
           </div>

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Flashcard } from '../types'
 import { DynamicIllustration } from './Illustrations'
 import { TheraMascot } from './Mascot'
+import { useApp } from '../contexts/AppContext'
+import { FLASHCARD_DATA } from '../data/flashcards'
 
 interface FlashcardDeckProps {
   cards: Flashcard[]
@@ -19,16 +21,18 @@ export function FlashcardDeck({
   categories,
   onSelectCategory,
   onShuffle,
-  onCardLearned,
   onOpenSpeechModal,
 }: FlashcardDeckProps) {
+  const { markCardLearned, isCardLearned, isCategoryCompleted, resetFlashcardProgress } = useApp()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationText, setCelebrationText] = useState<string | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
 
   const currentCard = cards[currentIndex] || cards[0]
+  const isLearned = currentCard ? isCardLearned(currentCard.id) : false
 
   // Reset index when cards change
   useEffect(() => {
@@ -69,12 +73,28 @@ export function FlashcardDeck({
   }
 
   const handleKnowThis = () => {
-    setShowCelebration(true)
-    onCardLearned()
+    if (!currentCard || isLearned) return
+
+    const categoryCards = FLASHCARD_DATA[categoryName] || cards
+    const allCategoryCardIds = categoryCards.map((c) => c.id)
+    const wasCategoryCompleteBefore = isCategoryCompleted(categoryName)
+
+    const willCategoryComplete = allCategoryCardIds.every(
+      (id) => id === currentCard.id || isCardLearned(id)
+    )
+
+    markCardLearned(currentCard.id, categoryName, allCategoryCardIds)
+
+    if (willCategoryComplete && !wasCategoryCompleteBefore) {
+      setCelebrationText(`Category Complete! 🎉 +50 Bonus Stars! ⭐`)
+    } else {
+      setCelebrationText(`Word Learned! +15 Stars ⭐`)
+    }
+
     setTimeout(() => {
-      setShowCelebration(false)
+      setCelebrationText(null)
       handleNext()
-    }, 900)
+    }, 1400)
   }
 
   const handleRepeat = () => {
@@ -140,6 +160,14 @@ export function FlashcardDeck({
             <span>Shuffle</span>
           </button>
 
+          {/* Reset Button */}
+          <button
+            onClick={() => setShowResetModal(true)}
+            className="text-xs font-extrabold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3.5 py-2 rounded-xl transition-all cursor-pointer"
+          >
+            🔄 Reset
+          </button>
+
           {/* Index Counter Pill */}
           <div className="bg-purple-100 text-purple-800 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide">
             {currentIndex + 1} / {cards.length}
@@ -150,13 +178,14 @@ export function FlashcardDeck({
       {/* ── Main Flashcard Stage ────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center relative min-h-0 py-2">
         {/* Celebration Particles Overlay */}
-        {showCelebration && (
+        {celebrationText && (
           <div className="absolute inset-0 pointer-events-none z-40 flex items-center justify-center">
-            <div className="text-6xl animate-bounce flex gap-4">
-              <span className="animate-ping">⭐</span>
-              <span className="animate-spin">🌟</span>
-              <span className="animate-bounce">🎉</span>
-              <span className="animate-ping">⭐</span>
+            <div className="bg-emerald-500 text-white px-8 py-4 rounded-3xl text-lg font-black shadow-2xl animate-bounceIn flex items-center gap-3">
+              <span className="animate-starPop text-2xl">⭐</span>
+              <span>{celebrationText}</span>
+              <span className="animate-starPop text-2xl" style={{ animationDelay: '0.1s' }}>
+                ⭐
+              </span>
             </div>
           </div>
         )}
@@ -176,7 +205,7 @@ export function FlashcardDeck({
           {/* 3D Flip Card Container */}
           <div
             onClick={() => setIsFlipped(!isFlipped)}
-            className="w-96 h-96 sm:w-[400px] sm:h-[400px] perspective-1000 cursor-pointer group shrink-0"
+            className="w-96 h-96 sm:w-[400px] sm:h-[400px] perspective-1000 cursor-pointer group shrink-0 relative"
           >
             <div
               className={`relative w-full h-full duration-500 transform-style-3d transition-transform ${
@@ -184,11 +213,17 @@ export function FlashcardDeck({
               }`}
             >
               {/* ── CARD FRONT ─────────────────────────────────────────── */}
-              <div
-                className="absolute inset-0 w-full h-full bg-white rounded-[32px] p-6 flex flex-col items-center justify-between border-4 border-purple-200 shadow-xl shadow-purple-500/10 backface-hidden"
-              >
-                {/* Speaker Audio Trigger Button */}
-                <div className="w-full flex justify-end">
+              <div className="absolute inset-0 w-full h-full bg-white rounded-[32px] p-6 flex flex-col items-center justify-between border-4 border-purple-200 shadow-xl shadow-purple-500/10 backface-hidden">
+                {/* Completed Badge & Speaker Audio Trigger Button */}
+                <div className="w-full flex items-center justify-between">
+                  {isLearned ? (
+                    <div className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
+                      <span>✓</span>
+                      <span>Completed</span>
+                    </div>
+                  ) : (
+                    <div />
+                  )}
                   <button
                     onClick={speakWord}
                     aria-label="Pronounce word"
@@ -218,9 +253,7 @@ export function FlashcardDeck({
               </div>
 
               {/* ── CARD BACK ──────────────────────────────────────────── */}
-              <div
-                className="absolute inset-0 w-full h-full bg-gradient-to-b from-purple-900 to-indigo-950 text-white rounded-[32px] p-7 flex flex-col justify-between border-4 border-purple-400 shadow-2xl rotate-y-180 backface-hidden"
-              >
+              <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-purple-900 to-indigo-950 text-white rounded-[32px] p-7 flex flex-col justify-between border-4 border-purple-400 shadow-2xl rotate-y-180 backface-hidden">
                 <div>
                   <div className="flex items-center justify-between text-purple-300 text-xs font-black tracking-widest uppercase mb-2">
                     <span>{currentCard?.category}</span>
@@ -301,29 +334,65 @@ export function FlashcardDeck({
           <span>Repeat</span>
         </button>
 
-        <button
-          onClick={handleKnowThis}
-          className="flex items-center gap-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-3 rounded-2xl font-extrabold text-sm shadow-lg shadow-purple-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span>I Know This</span>
-        </button>
+        {isLearned ? (
+          <button
+            disabled
+            className="flex items-center gap-2.5 bg-emerald-100 text-emerald-800 border border-emerald-300 px-8 py-3 rounded-2xl font-extrabold text-sm shadow-xs cursor-default opacity-95"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Completed ✓</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleKnowThis}
+            className="flex items-center gap-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-3 rounded-2xl font-extrabold text-sm shadow-lg shadow-purple-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+              <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>I Know This (+15⭐)</span>
+          </button>
+        )}
       </div>
 
-      {/* ── Bottom Left Mascot & Landscape ─────────────────────────────── */}
+      {/* Mascot */}
       <div className="absolute bottom-0 left-2 pointer-events-none z-0">
-        <TheraMascot message="Great job! ⭐" />
+        <TheraMascot message={isLearned ? 'Card completed! Great job! ⭐' : 'Keep learning new words! ⭐'} />
       </div>
 
-      {/* Pastel Wavy Background Landscape Hills */}
-      <div className="absolute bottom-0 inset-x-0 h-16 pointer-events-none -z-10 overflow-hidden">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-full opacity-60">
-          <path d="M0 60 Q 300 20 600 50 T 1200 40 V 120 H 0 Z" fill="#EDE9FE" />
-          <path d="M0 80 Q 400 40 800 70 T 1200 60 V 120 H 0 Z" fill="#DDD6FE" />
-        </svg>
-      </div>
+      {/* Parent Reset Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center border border-purple-100 shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-purple-100 text-purple-700 text-2xl flex items-center justify-center mx-auto mb-3">
+              🔄
+            </div>
+            <h3 className="text-lg font-black text-gray-900 mb-1">Reset Flash Card Progress?</h3>
+            <p className="text-xs text-gray-500 font-semibold mb-5">
+              Parent/Admin Control: Resetting will clear completed cards so stars can be earned again.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2.5 rounded-2xl border border-gray-200 text-gray-700 font-extrabold text-xs cursor-pointer hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  resetFlashcardProgress()
+                  setShowResetModal(false)
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-purple-600 text-white font-extrabold text-xs cursor-pointer hover:bg-purple-700 shadow-md"
+              >
+                Confirm Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
