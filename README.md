@@ -1,159 +1,255 @@
+<div align="center">
+
 # 🧠 TheraBoost AI
 
-> **AI-Powered Smart Reinforcement Application for Speech Therapy in Children with ASD**
+### AI-Powered Smart Reinforcement Application for Speech Therapy in Children with Autism Spectrum Disorder (ASD)
 
-TheraBoost AI is an AI-assisted educational and speech therapy platform designed to improve motivation and therapy adherence for children with Autism Spectrum Disorder (ASD). The application uses **personalized reinforcement strategies**, **interactive learning activities**, and **culturally relevant reward videos** to make therapy engaging and effective.
+<p align="center">
+An intelligent therapy companion that combines AI, speech practice, gamification, and culturally relevant positive reinforcement to improve therapy engagement.
+</p>
 
-🌐 **Live Demo:** https://theraboost-ai.vercel.app/
+<p align="center">
+
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-Latest-646CFF?logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?logo=tailwind-css&logoColor=white)
+![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)
+![License](https://img.shields.io/badge/License-Educational-success)
+
+</p>
+
+🌐 **Live Demo**
+
+https://theraboost-ai.vercel.app/
+
+</div>
 
 ---
 
-## 📖 Project Overview
+# 📚 Table of Contents
 
-Traditional speech therapy can become repetitive, causing children to lose motivation over time. TheraBoost AI addresses this challenge by introducing an intelligent reinforcement system that rewards children with engaging educational content after completing therapy activities.
-
-The application personalizes learning experiences by tracking progress, recommending reinforcement, and encouraging continuous participation.
+- About
+- Problem Statement
+- Solution
+- Features
+- Application Workflow
+- AI Features
+- Technology Stack
+- Screenshots
+- Installation
+- Folder Structure
+- Future Enhancements
+- Developer
 
 ---
 
-# ✨ Features
+# 📖 About
 
-## 🏠 Home Dashboard
-- Personalized welcome screen
-- Daily learning goals
-- Progress overview
-- AI recommendations
+TheraBoost AI is an AI-assisted educational speech therapy platform developed to improve motivation and therapy adherence for children with Autism Spectrum Disorder (ASD).
+
+Instead of using traditional rewards, the application introduces **positive reinforcement** by unlocking educational and culturally relevant reward videos after therapy activities are successfully completed.
+
+The system tracks learning progress, monitors engagement, and recommends personalized reinforcement to make therapy more interactive and enjoyable.
+
+---
+
+# 🎯 Problem Statement
+
+Children with ASD often lose motivation during repetitive speech therapy sessions.
+
+The objective of this project is to develop a **Smart Reinforcement Application** that:
+
+- Increases therapy engagement
+- Provides personalized reinforcement
+- Tracks learner motivation
+- Encourages consistent participation
+- Supports therapists and parents with progress analytics
+
+---
+
+# 💡 Solution
+
+TheraBoost AI combines
+
+- Artificial Intelligence
+- Positive Reinforcement
+- Gamification
+- Speech Therapy
+- Educational Games
+- Indian Cultural Learning
+
+into one intelligent learning platform.
+
+The application rewards successful therapy sessions with engaging educational content rather than using traditional reward systems.
+
+---
+
+# ✨ Key Features
+
+## 🏠 Dashboard
+
+- Personalized Welcome
+- Daily Goals
+- Learning Progress
+- AI Recommendations
 - Notifications
-- Continue learning section
+- Continue Learning
 
 ---
 
 ## 🎤 Speech Practice
-- Interactive speech exercises
-- Pronunciation practice
-- AI feedback
-- Speech progress tracking
-- Performance scoring
+
+- Interactive Speech Exercises
+- Pronunciation Practice
+- Performance Tracking
+- Speech Progress
+- AI Feedback
 
 ---
 
 ## 🖼 Flash Cards
-- Interactive learning cards
-- Image recognition
-- Vocabulary improvement
-- One-time reward system
-- Progress tracking
+
+- Interactive Learning
+- Vocabulary Development
+- Progress Tracking
+- One-Time Reward Logic
 
 ---
 
 ## 🧩 Matching Games
-- Memory matching
-- Animal matching
-- Object matching
-- Interactive gameplay
-- Educational reinforcement
+
+- Memory Matching
+- Educational Activities
+- Interactive Gameplay
+- Child-Friendly Design
 
 ---
 
 ## 🎥 Reward Videos
-- Indian Culture videos
-- Educational videos
-- Animal videos
-- Nature videos
-- Motivational videos
 
-Reward videos are unlocked only after completing therapy activities and act as **positive reinforcement**, not as point-generating activities.
+Reward Videos are **positive reinforcement**.
+
+The child earns the opportunity to watch videos **after successfully completing therapy activities**.
+
+Categories include:
+
+- 🇮🇳 Indian Culture
+- 🐘 Animals
+- 🌿 Nature
+- 🎵 Music
+- 📚 Educational Learning
+
+---
+
+## ⭐ Rewards
+
+- Stars
+- Achievements
+- Daily Streaks
+- Progress Milestones
+
+Rewards are granted only once for completed therapy activities.
 
 ---
 
 ## 📊 Skill Progress
-Track improvements in:
+
+Monitor improvements in
 
 - Pronunciation
 - Vocabulary
 - Listening
 - Speech Accuracy
-- Learning Progress
-- Overall Performance
+- Overall Learning Progress
 
 ---
 
 ## 📅 Personalized Reinforcement Schedule
 
-AI-assisted daily schedules based on:
+Adaptive schedules generated using
 
-- Learning progress
-- Previous performance
-- Child preferences
-- Therapy history
-
----
-
-## ⭐ Rewards System
-
-- Stars
-- Achievements
-- Badges
-- Daily streaks
-- Progress milestones
-
-Rewards are granted only once for completed activities.
+- Learning Progress
+- Previous Sessions
+- Performance
+- Child Preferences
 
 ---
 
 ## 👨‍👩‍👧 Parent Dashboard
 
-- Child progress monitoring
-- Learning analytics
-- Therapy reports
-- Performance tracking
-- Progress visualization
+- Progress Reports
+- Learning Analytics
+- Child Performance
+- Therapy Insights
 
 ---
 
 # 🤖 AI Features
 
-TheraBoost AI includes intelligent learning support such as:
-
-- Personalized reinforcement
-- Adaptive learning suggestions
-- Smart reward recommendations
-- Progress analytics
-- Motivation tracking
-- Reinforcement scheduling
+- Personalized Reinforcement
+- Smart Reward Recommendation
+- Learning Progress Analysis
+- Adaptive Scheduling
+- Motivation Monitoring
+- Performance Insights
 
 ---
 
-# 🇮🇳 Indian Cultural Learning
+# 🔄 Application Workflow
 
-The application includes culturally relevant educational videos including:
-
-- Indian Festivals
-- National Symbols
-- Historical Monuments
-- Wildlife
-- Indian Heritage
-- Traditional Stories
+```text
+Login
+      │
+      ▼
+Home Dashboard
+      │
+      ▼
+Speech Practice
+Flash Cards
+Matching Games
+      │
+      ▼
+Complete Activity
+      │
+      ▼
+Earn Stars ⭐
+      │
+      ▼
+Unlock Reward Video 🎁
+      │
+      ▼
+Watch Educational Video
+      │
+      ▼
+AI Learns Child Preference
+      │
+      ▼
+Recommend Better Reinforcement
+```
 
 ---
 
 # 🛠 Technology Stack
 
 ### Frontend
+
 - React
 - TypeScript
 - Vite
 - Tailwind CSS
 
 ### UI
+
 - shadcn/ui
 - Lucide Icons
-- Responsive Design
 
 ### Deployment
+
 - Vercel
 
 ### Version Control
+
 - Git
 - GitHub
 
@@ -161,7 +257,7 @@ The application includes culturally relevant educational videos including:
 
 # 📱 Responsive Design
 
-TheraBoost AI supports:
+Supports
 
 - 💻 Desktop
 - 📱 Mobile
@@ -169,36 +265,30 @@ TheraBoost AI supports:
 
 ---
 
-# 🚀 Getting Started
+# 🚀 Installation
 
-## Clone the repository
+Clone the repository
 
 ```bash
 git clone https://github.com/muralisaiharish-dotcom/theraboost-ai.git
 ```
 
-## Navigate into the project
+Move into the project
 
 ```bash
 cd theraboost-ai
 ```
 
-## Install dependencies
+Install dependencies
 
 ```bash
 npm install
 ```
 
-## Run the development server
+Run the application
 
 ```bash
 npm run dev
-```
-
-Open your browser and visit:
-
-```
-http://localhost:5173
 ```
 
 ---
@@ -206,15 +296,15 @@ http://localhost:5173
 # 📂 Project Structure
 
 ```
-theraboost-ai/
+theraboost-ai
 │
-├── public/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   ├── hooks/
-│   ├── assets/
-│   ├── utils/
+├── public
+├── src
+│   ├── assets
+│   ├── components
+│   ├── pages
+│   ├── hooks
+│   ├── utils
 │   └── App.tsx
 │
 ├── package.json
@@ -224,33 +314,12 @@ theraboost-ai/
 
 ---
 
-# 🎯 Problem Statement
-
-This project was developed to address the problem of maintaining motivation during speech therapy for children with Autism Spectrum Disorder through AI-assisted personalized reinforcement strategies.
-
----
-
-# 🔮 Future Enhancements
-
-- Firebase Authentication
-- Cloud Database
-- AI Speech Recognition
-- Therapist Dashboard
-- PDF Reports
-- Push Notifications
-- Offline Mode
-- Multi-language Support
-- Voice Analytics
-- Reinforcement Recommendation Engine
-
----
-
 # 📸 Screenshots
 
-Add screenshots of:
+> Add screenshots here
 
-- Login Page
-- Home Dashboard
+- Login
+- Dashboard
 - Speech Practice
 - Flash Cards
 - Matching Games
@@ -260,37 +329,22 @@ Add screenshots of:
 
 ---
 
-# 📈 Project Status
+# 🔮 Future Enhancements
 
-✅ UI Completed
-
-✅ Responsive Design
-
-✅ Interactive Learning Modules
-
-✅ Reward System
-
-✅ Progress Tracking
-
-✅ Vercel Deployment
-
-🚧 AI Recommendation Engine (Future Enhancement)
-
-🚧 Backend Integration (Future Enhancement)
+- AI Speech Recognition
+- Firebase Authentication
+- Cloud Database
+- Therapist Dashboard
+- PDF Reports
+- Push Notifications
+- Offline Mode
+- Multi-language Support
 
 ---
 
-# 🤝 Contributing
+# 🎓 Academic Purpose
 
-Contributions, feature suggestions, and improvements are welcome.
-
-Feel free to fork the repository and submit a pull request.
-
----
-
-# 📄 License
-
-This project is developed for educational and academic purposes.
+This project was developed as part of an academic project to demonstrate the application of Artificial Intelligence and Positive Reinforcement in speech therapy for children with Autism Spectrum Disorder.
 
 ---
 
@@ -298,14 +352,22 @@ This project is developed for educational and academic purposes.
 
 **Murali Sai Harish**
 
-GitHub: https://github.com/muralisaiharish-dotcom
+GitHub
+
+https://github.com/muralisaiharish-dotcom
 
 ---
 
-## ⭐ Support
+# ⭐ Support
 
-If you found this project helpful, please consider giving it a ⭐ on GitHub!
+If you like this project, consider giving it a ⭐ on GitHub.
 
 ---
 
-**TheraBoost AI — Empowering Speech Therapy Through Intelligent Reinforcement.**
+<div align="center">
+
+## Thank You ❤️
+
+**Empowering Children Through Intelligent Reinforcement**
+
+</div>
