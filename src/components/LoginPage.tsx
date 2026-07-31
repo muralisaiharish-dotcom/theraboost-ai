@@ -87,6 +87,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         email: DEMO_EMAIL,
         avatar: '👦',
         level: 3,
+        role: 'child',
       }
       onLogin(user)
     } else {

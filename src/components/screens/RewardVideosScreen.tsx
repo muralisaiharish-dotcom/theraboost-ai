@@ -198,7 +198,7 @@ export function RewardVideosScreen() {
                   {activeVideo.category}
                 </span>
                 <h2 className="text-base font-black text-gray-900 mt-1">{activeVideo.title}</h2>
-                <p className="text-xs text-gray-500 font-semibold mt-0.5">{activeVideo.description}</p>
+                <p className="text-xs text-gray-500 font-semibold mt-0.5">{(activeVideo as any).description || 'Fun and educational pediatric therapy video for kids!'}</p>
               </div>
 
               <div className="flex items-center justify-between bg-amber-50 border border-amber-200 p-3 rounded-2xl">
