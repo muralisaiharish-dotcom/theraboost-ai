@@ -51,12 +51,26 @@ export interface JungleEcosystemData {
 }
 
 const JUNGLE_TRANSFORMATIONS_KEY = 'REINFORCE_AI_JUNGLE_TRANSFORMATIONS_V2'
+const JUNGLE_UNLOCKED_SPECIES_KEY = 'REINFORCE_AI_UNLOCKED_SPECIES_V2'
+
+export function getPersistedUnlockedSpecies(): string[] {
+  return storageGet<string[]>(JUNGLE_UNLOCKED_SPECIES_KEY as unknown as STORAGE_KEYS, ['monkey', 'waterfall', 'fireflies', 'butterflies']) // default starter unlocked
+}
+
+export function unlockSpeciesInStorage(speciesId: string): string[] {
+  const current = getPersistedUnlockedSpecies()
+  if (!current.includes(speciesId)) {
+    const updated = [...current, speciesId]
+    storageSet(JUNGLE_UNLOCKED_SPECIES_KEY as unknown as STORAGE_KEYS, updated)
+    return updated
+  }
+  return current
+}
 
 export function getPersistedTransformations(): TransformationEvent[] {
   const stored = storageGet<TransformationEvent[]>(JUNGLE_TRANSFORMATIONS_KEY as unknown as STORAGE_KEYS, [])
   if (stored && stored.length > 0) return stored
 
-  // Default initial transformation entries
   return [
     {
       id: 'tf-1',
@@ -113,7 +127,7 @@ export function logJungleTransformation(event: Omit<TransformationEvent, 'id' | 
     timestamp: new Date().toISOString(),
     timeAgo: 'Just now',
   }
-  const updated = [newEntry, ...current].slice(0, 20) // Keep top 20
+  const updated = [newEntry, ...current].slice(0, 20)
   storageSet(JUNGLE_TRANSFORMATIONS_KEY as unknown as STORAGE_KEYS, updated)
   return updated
 }
@@ -125,11 +139,12 @@ export function computeJungleEcosystem(
   learnedCardIds: string[],
   motivationScore: MotivationScore
 ): JungleEcosystemData {
-  // Activity counts
   const speechActivities = activityLog.filter((a) => a.activityType === 'speech').length
   const flashcardActivities = activityLog.filter((a) => a.activityType === 'flashcard').length
   const matchingGames = activityLog.filter((a) => a.activityType === 'matching_game').length
   const rewardVideos = activityLog.filter((a) => a.activityType === 'reward_video').length
+
+  const persistedUnlocked = getPersistedUnlockedSpecies()
 
   // Ecosystem Stage & Level based on XP
   let ecosystemLevel = 1
@@ -152,20 +167,17 @@ export function computeJungleEcosystem(
     ecosystemStageName = 'Seed'
   }
 
-  // Forest Age = Days active
   const forestAgeDays = Math.max(1, stats.dayStreak + Math.floor(stats.totalActivities / 3))
 
-  // Dynamically computed Ecosystem Counts
   const totalTrees = Math.max(12, 10 + speechActivities * 3 + Math.floor(speechScore / 10))
   const flowersBloomed = Math.max(28, 25 + learnedCardIds.length * 4 + flashcardActivities * 5)
   const butterfliesCount = Math.max(8, 6 + matchingGames * 4 + (learnedCardIds.length >= 20 ? 10 : 0))
   const birdsCount = Math.max(5, 4 + rewardVideos * 3)
   const riverExpansionPct = Math.min(100, Math.max(35, stats.dayStreak * 12))
-  const waterfallsCount = stats.dayStreak >= 7 ? 3 : Math.max(1, Math.floor(stats.dayStreak / 2))
-  const ancientTemplesCount = ecosystemLevel >= 5 ? 3 : Math.max(1, Math.floor(stats.xp / 300))
-  const firefliesCount = stats.starsEarned >= 100 ? Math.max(25, Math.floor(stats.starsEarned / 10)) : 12
+  const waterfallsCount = (stats.dayStreak >= 7 || persistedUnlocked.includes('waterfall')) ? 3 : Math.max(1, Math.floor(stats.dayStreak / 2))
+  const ancientTemplesCount = (ecosystemLevel >= 5 || persistedUnlocked.includes('ancient_temple')) ? 3 : Math.max(1, Math.floor(stats.xp / 300))
+  const firefliesCount = (stats.starsEarned >= 100 || persistedUnlocked.includes('fireflies')) ? Math.max(35, Math.floor(stats.starsEarned / 10)) : 12
 
-  // Determine weather state based on motivation score
   let weatherState: 'sunshine' | 'glowing' | 'cloudy' | 'rain' = 'glowing'
   if (motivationScore.score >= 80) {
     weatherState = 'sunshine'
@@ -177,8 +189,6 @@ export function computeJungleEcosystem(
     weatherState = 'rain'
   }
 
-  // Jungle Health Score Calculation (0-100)
-  // Health = Speech + Consistency + Streak + Motivation + Completed Activities + Reward Balance + AI Engagement
   const speechFactor = (speechScore / 100) * 20
   const streakFactor = Math.min(20, (stats.dayStreak / 7) * 20)
   const motivationFactor = (motivationScore.score / 100) * 20
@@ -205,7 +215,6 @@ export function computeJungleEcosystem(
     `• Completed ${stats.totalActivities} Total Therapy Activities across Modules`,
   ]
 
-  // AI Ecosystem Recommendation based on Weakest Module
   let aiRecommendation = ''
   if (speechScore < 75 || speechActivities < flashcardActivities) {
     aiRecommendation = 'Speech Practice needs attention. Complete 1 speech session to grow 3 tall mahogany trees!'
@@ -219,7 +228,6 @@ export function computeJungleEcosystem(
     aiRecommendation = 'Complete 1 more Matching Game to attract a gentle Elephant 🐘 to your river bank!'
   }
 
-  // Dynamic AI Nature Guide Message
   let aiGuideSpeech = ''
   if (speechScore >= 85) {
     aiGuideSpeech = `Sensational job! Your speech confidence reached ${speechScore}% today, causing your forest canopy to expand with 3 new majestic trees!`
@@ -231,7 +239,7 @@ export function computeJungleEcosystem(
     aiGuideSpeech = `Welcome to your personal living jungle! Every therapy activity you complete will directly grow trees, bloom flowers, and attract wildlife.`
   }
 
-  // 13 Unlockable Species & Wonders with Exact Requirements
+  // 13 Unlockable Species & Wonders with Exact Requirements & Storage Persisted Overrides
   const unlockables: UnlockableItem[] = [
     {
       id: 'elephant',
@@ -241,7 +249,7 @@ export function computeJungleEcosystem(
       requiredActivity: '3 Matching Games',
       requiredCount: 3,
       currentCount: matchingGames,
-      unlocked: matchingGames >= 3,
+      unlocked: matchingGames >= 3 || persistedUnlocked.includes('elephant'),
       description: 'Loves drinking at the expanding river bank during high streaks.',
       rarity: 'Epic',
     },
@@ -253,7 +261,7 @@ export function computeJungleEcosystem(
       requiredActivity: '5 Flash Cards',
       requiredCount: 5,
       currentCount: learnedCardIds.length,
-      unlocked: learnedCardIds.length >= 5,
+      unlocked: learnedCardIds.length >= 5 || persistedUnlocked.includes('monkey'),
       description: 'Swings across the tall trees grown from speech practice.',
       rarity: 'Common',
     },
@@ -265,7 +273,7 @@ export function computeJungleEcosystem(
       requiredActivity: '100 Total Activities',
       requiredCount: 100,
       currentCount: stats.totalActivities,
-      unlocked: stats.totalActivities >= 100,
+      unlocked: stats.totalActivities >= 100 || persistedUnlocked.includes('lion'),
       description: 'Guards the sacred forest temple and symbolizes immense bravery.',
       rarity: 'Legendary',
     },
@@ -277,7 +285,7 @@ export function computeJungleEcosystem(
       requiredActivity: '90% Speech Accuracy',
       requiredCount: 90,
       currentCount: speechScore,
-      unlocked: speechScore >= 90,
+      unlocked: speechScore >= 90 || persistedUnlocked.includes('parrot'),
       description: 'Echoes back your speech practice words with joyful chirps.',
       rarity: 'Rare',
     },
@@ -289,7 +297,7 @@ export function computeJungleEcosystem(
       requiredActivity: '5 Reward Videos',
       requiredCount: 5,
       currentCount: rewardVideos,
-      unlocked: rewardVideos >= 5,
+      unlocked: rewardVideos >= 5 || persistedUnlocked.includes('peacock'),
       description: 'Displays brilliant feathers whenever reward videos are enjoyed.',
       rarity: 'Rare',
     },
@@ -301,7 +309,7 @@ export function computeJungleEcosystem(
       requiredActivity: '20 Flash Cards',
       requiredCount: 20,
       currentCount: learnedCardIds.length,
-      unlocked: learnedCardIds.length >= 20,
+      unlocked: learnedCardIds.length >= 20 || persistedUnlocked.includes('butterflies'),
       description: 'A magical meadow where iridescent butterflies dance in the sun.',
       rarity: 'Common',
     },
@@ -313,7 +321,7 @@ export function computeJungleEcosystem(
       requiredActivity: 'Level 5 (Sacred Forest)',
       requiredCount: 5,
       currentCount: ecosystemLevel,
-      unlocked: ecosystemLevel >= 5,
+      unlocked: ecosystemLevel >= 5 || persistedUnlocked.includes('ancient_temple'),
       description: 'Glows with gold runes when major therapy achievements are unlocked.',
       rarity: 'Mythic',
     },
@@ -325,7 +333,7 @@ export function computeJungleEcosystem(
       requiredActivity: '7-Day Streak',
       requiredCount: 7,
       currentCount: stats.dayStreak,
-      unlocked: stats.dayStreak >= 7,
+      unlocked: stats.dayStreak >= 7 || persistedUnlocked.includes('waterfall'),
       description: 'Cascades down ancient mossy rocks, fed by your continuous streak.',
       rarity: 'Legendary',
     },
@@ -337,7 +345,7 @@ export function computeJungleEcosystem(
       requiredActivity: 'Motivation > 90',
       requiredCount: 90,
       currentCount: motivationScore.score,
-      unlocked: motivationScore.score >= 90,
+      unlocked: motivationScore.score >= 90 || persistedUnlocked.includes('rainbow'),
       description: 'Arcs across the canopy during peak motivation & joy.',
       rarity: 'Epic',
     },
@@ -349,7 +357,7 @@ export function computeJungleEcosystem(
       requiredActivity: '100 Stars Earned',
       requiredCount: 100,
       currentCount: stats.starsEarned,
-      unlocked: stats.starsEarned >= 100,
+      unlocked: stats.starsEarned >= 100 || persistedUnlocked.includes('fireflies'),
       description: 'Illuminates the dark forest at dusk with dancing light points.',
       rarity: 'Common',
     },
@@ -361,7 +369,7 @@ export function computeJungleEcosystem(
       requiredActivity: '50 Speech Sessions',
       requiredCount: 50,
       currentCount: speechActivities,
-      unlocked: speechActivities >= 50,
+      unlocked: speechActivities >= 50 || persistedUnlocked.includes('ancient_tree'),
       description: 'The ancient heart of the jungle, growing taller with speech practice.',
       rarity: 'Mythic',
     },

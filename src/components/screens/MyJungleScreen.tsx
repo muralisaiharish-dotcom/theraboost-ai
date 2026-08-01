@@ -3,6 +3,7 @@ import { useApp } from '../../contexts/AppContext'
 import {
   computeJungleEcosystem,
   logJungleTransformation,
+  unlockSpeciesInStorage,
   type UnlockableItem,
   type TransformationEvent,
 } from '../../engine/jungleEngine'
@@ -13,6 +14,7 @@ export function MyJungleScreen() {
   const { state, motivationScore, addXP, addStars } = useApp()
   const [selectedRarity, setSelectedRarity] = useState<string>('All')
   const [celebrationItem, setCelebrationItem] = useState<UnlockableItem | null>(null)
+  const [unlockedOverrideTick, setUnlockedOverrideTick] = useState<number>(0)
   const [transformationLogs, setTransformationLogs] = useState<TransformationEvent[]>(() => {
     return computeJungleEcosystem(
       state.stats,
@@ -35,7 +37,7 @@ export function MyJungleScreen() {
       ...base,
       transformationHistory: transformationLogs,
     }
-  }, [state.stats, state.activityLog, state.speechScore, state.learnedCardIds, motivationScore, transformationLogs])
+  }, [state.stats, state.activityLog, state.speechScore, state.learnedCardIds, motivationScore, transformationLogs, unlockedOverrideTick])
 
   const handleSimulatedTrigger = (
     type: string,
@@ -44,34 +46,54 @@ export function MyJungleScreen() {
     starsEarned: number,
     healthChange: string
   ) => {
-    // Add real state updates!
     addXP(xpEarned)
     addStars(starsEarned)
 
-    // Map trigger types to descriptive activity names
+    // Also persist specific unlock when trigger is pressed!
+    if (type === 'monkey') unlockSpeciesInStorage('monkey')
+    else if (type === 'waterfall') unlockSpeciesInStorage('waterfall')
+    else if (type === 'bird') unlockSpeciesInStorage('parrot')
+    else if (type === 'achievement') unlockSpeciesInStorage('ancient_temple')
+
     const activityNames: Record<string, string> = {
       tree: 'Speech Practice Completed',
       flower: 'Flash Cards Mastered',
-      butterfly: 'Matching Game Champion',
+      monkey: 'Playful Monkey Unlocked & Climbed Trees',
       bird: 'Reward Video Enjoyed',
       achievement: 'Major Achievement Unlocked',
-      streak: '7-Day Streak Active',
+      waterfall: '7-Day Streak & Waterfall Flowing',
       motivation: 'High Motivation Boost',
     }
 
     const updated = logJungleTransformation({
       activity: activityNames[type] || 'Therapy Activity',
       effect: message,
-      icon: type === 'tree' ? '🌳' : type === 'flower' ? '🌸' : type === 'butterfly' ? '🦋' : type === 'bird' ? '🦜' : type === 'achievement' ? '🏛️' : type === 'streak' ? '💦' : '🌈',
+      icon: type === 'tree' ? '🌳' : type === 'flower' ? '🌸' : type === 'monkey' ? '🐒' : type === 'bird' ? '🦜' : type === 'achievement' ? '🏛️' : type === 'waterfall' ? '💦' : '🌈',
       xpEarned,
       starsEarned,
       healthChange,
     })
 
     setTransformationLogs(updated)
+    setUnlockedOverrideTick((prev) => prev + 1)
   }
 
-  // Filtered Species Collection based on selected rarity tier
+  const handleSpeciesCardClick = (item: UnlockableItem) => {
+    // Save to LocalStorage immediately so it persists!
+    unlockSpeciesInStorage(item.id)
+    setCelebrationItem({ ...item, unlocked: true })
+    setUnlockedOverrideTick((prev) => prev + 1)
+
+    logJungleTransformation({
+      activity: `${item.name} Unlocked`,
+      effect: `${item.emoji} ${item.name} was added to your living ecosystem visualization!`,
+      icon: item.emoji,
+      xpEarned: 35,
+      starsEarned: 20,
+      healthChange: '+5%',
+    })
+  }
+
   const filteredUnlockables = useMemo(() => {
     if (selectedRarity === 'All') return ecosystem.unlockables
     return ecosystem.unlockables.filter((u) => u.rarity === selectedRarity)
@@ -87,7 +109,7 @@ export function MyJungleScreen() {
         <div className="space-y-1.5 z-10">
           <div className="flex items-center gap-2">
             <span className="bg-emerald-500/20 text-emerald-300 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 uppercase tracking-widest">
-              🌳 Living Therapy Ecosystem
+              🌳 Dynamic Ecosystem Renderer
             </span>
             <span className="bg-amber-500/20 text-amber-300 text-xs font-extrabold px-3 py-1 rounded-full border border-amber-500/30">
               Stage: {ecosystem.ecosystemStageName} (Level {ecosystem.ecosystemLevel})
@@ -97,7 +119,7 @@ export function MyJungleScreen() {
             Living Reinforcement Ecosystem
           </h1>
           <p className="text-emerald-200/80 text-xs sm:text-sm max-w-2xl leading-relaxed">
-            Instead of basic stars or numbers, every speech attempt, flashcard, and activity directly transforms your child's personal magical jungle.
+            Every unlocked animal, waterfall, banyan tree, and temple is immediately rendered inside the visual ecosystem scene and persisted in LocalStorage.
           </p>
         </div>
 
@@ -113,7 +135,6 @@ export function MyJungleScreen() {
           </div>
         </div>
 
-        {/* Ambient background glow */}
         <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
@@ -312,11 +333,10 @@ export function MyJungleScreen() {
               <span>✨</span> Ecosystem Species Collection & Rarity Tiers
             </h2>
             <p className="text-xs text-emerald-200/70 font-semibold">
-              Click any card to preview unlock celebrations. Unlocks persist in LocalStorage.
+              Click any card to unlock & spawn it directly into the visual ecosystem scene!
             </p>
           </div>
 
-          {/* Rarity Tier Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
             {['All', 'Common', 'Rare', 'Epic', 'Legendary', 'Mythic'].map((tier) => (
               <button
@@ -338,11 +358,11 @@ export function MyJungleScreen() {
           {filteredUnlockables.map((item) => (
             <div
               key={item.id}
-              onClick={() => item.unlocked && setCelebrationItem(item)}
+              onClick={() => handleSpeciesCardClick(item)}
               className={`p-4 rounded-3xl border transition-all flex flex-col justify-between space-y-3 relative overflow-hidden cursor-pointer ${
                 item.unlocked
                   ? 'bg-gradient-to-b from-emerald-950/80 to-[#0A2218] border-emerald-500/40 hover:scale-[1.02] shadow-xl'
-                  : 'bg-emerald-950/30 border-emerald-900/30 opacity-60 grayscale'
+                  : 'bg-emerald-950/30 border-emerald-900/30 opacity-70 hover:opacity-100 hover:border-emerald-500/40'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -377,7 +397,7 @@ export function MyJungleScreen() {
                 </div>
 
                 <span className="text-xs font-black">
-                  {item.unlocked ? '✅' : '🔒'}
+                  {item.unlocked ? '✅ Rendered' : '🔒 Tap to Unlock'}
                 </span>
               </div>
 
@@ -385,12 +405,11 @@ export function MyJungleScreen() {
                 {item.description}
               </p>
 
-              {/* Requirement & Progress Bar */}
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] font-extrabold text-emerald-300/80">
                   <span>Req: {item.requiredActivity}</span>
                   <span>
-                    {item.unlocked ? 'Unlocked' : `${item.currentCount} / ${item.requiredCount}`}
+                    {item.unlocked ? 'Unlocked & Active' : `${item.currentCount} / ${item.requiredCount}`}
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-emerald-950 rounded-full overflow-hidden border border-emerald-800/40">
@@ -409,7 +428,7 @@ export function MyJungleScreen() {
         </div>
       </div>
 
-      {/* ── Recent Ecosystem Transformations Timeline ── */}
+      {/* ── Transformation Timeline ── */}
       <div className="bg-gradient-to-br from-emerald-950/70 via-[#091F16] to-emerald-950/70 p-6 rounded-3xl border border-emerald-500/30 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black tracking-wide text-white flex items-center gap-2">
