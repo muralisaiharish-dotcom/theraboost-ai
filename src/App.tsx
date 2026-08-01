@@ -19,6 +19,7 @@ import { ReinforcementScreen } from './components/screens/ReinforcementScreen'
 import { ProfileScreen } from './components/screens/ProfileScreen'
 import { SettingsScreen } from './components/screens/SettingsScreen'
 import { ParentDashboardScreen } from './components/screens/ParentDashboardScreen'
+import { MagicRewardScannerScreen } from './components/screens/MagicRewardScannerScreen'
 
 function AppContent() {
   const { state: authState } = useAuth()
@@ -73,6 +74,8 @@ function AppContent() {
         return <GamesScreen />
       case 'Reward Videos':
         return <RewardVideosScreen />
+      case 'Magic Scanner':
+        return <MagicRewardScannerScreen />
       case 'My Progress':
         return <MyProgressScreen />
       case 'Achievements':

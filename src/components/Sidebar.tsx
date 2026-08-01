@@ -11,6 +11,7 @@ export function Sidebar({ activeNav, onNavChange, userLevel }: SidebarProps) {
     { id: 'Flash Cards', label: 'Flash Cards', icon: '🃏' },
     { id: 'Matching Games', label: 'Matching Games', icon: '🧩' },
     { id: 'Reward Videos', label: 'Reward Videos', icon: '🎬' },
+    { id: 'Magic Scanner', label: 'Magic Scanner', icon: '📷' },
     { id: 'My Progress', label: 'My Progress', icon: '📊' },
     { id: 'Personalized Reinforcement', label: 'Personalized Schedules', icon: '📅' },
     { id: 'Achievements', label: 'Achievements', icon: '🏆' },

@@ -204,3 +204,33 @@ export interface AnalyticsData {
   generatedAt: string
 }
 
+// ─── Magic Scanner Types ──────────────────────────────────────────────────────
+
+export type MagicSymbolId = 'star' | 'smile' | 'music' | 'moon' | 'heart' | 'rainbow'
+
+export interface MagicSymbolConfig {
+  id: MagicSymbolId
+  name: string
+  symbol: string
+  xp: number
+  stars: number
+  rewardText: string
+  unlockedPerk?: string
+  description: string
+  badgeColor: string
+  glowColor: string
+}
+
+export interface MagicScanLog {
+  id: string
+  symbolId: MagicSymbolId
+  name: string
+  symbol: string
+  xpEarned: number
+  starsEarned: number
+  rewardText: string
+  confidence: number
+  timestamp: string
+}
+
+

@@ -35,6 +35,8 @@ export function ResponsiveShell({ children }: ResponsiveShellProps) {
   // ── Laptop / Desktop Layout ──
   const renderRightPanel = () => {
     switch (activeScreen) {
+      case 'Magic Scanner':
+        return null
       case 'Home':
         return <HomeRightPanel stats={stats} />
       case 'Speech Practice':
@@ -54,15 +56,17 @@ export function ResponsiveShell({ children }: ResponsiveShellProps) {
             stats={stats}
             categories={CATEGORIES}
             activeCategory="Animals"
-            onSelectCategory={() => {}}
+            onSelectCategory={() => { }}
             onOpenReport={() => navigate('My Progress')}
-            onOpenCategoryModal={() => {}}
+            onOpenCategoryModal={() => { }}
           />
         )
       default:
         return <HomeRightPanel stats={stats} />
     }
   }
+
+  const showRightPanel = activeScreen !== 'Magic Scanner'
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#F4F2FD] overflow-hidden text-gray-900 select-none">
@@ -90,9 +94,11 @@ export function ResponsiveShell({ children }: ResponsiveShellProps) {
         </main>
 
         {/* Right Sidebar Panel */}
-        <div className="py-5 pr-5 shrink-0 hidden lg:block">
-          {renderRightPanel()}
-        </div>
+        {showRightPanel && (
+          <div className="py-5 pr-5 shrink-0 hidden lg:block">
+            {renderRightPanel()}
+          </div>
+        )}
       </div>
     </div>
   )

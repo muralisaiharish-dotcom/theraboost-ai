@@ -4,7 +4,7 @@ import type { VideoItem } from './RewardVideosData'
 // Detect YouTube URLs and extract video ID
 function getYouTubeId(url: string): string | null {
   const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/
   )
   return match ? match[1] : null
 }
