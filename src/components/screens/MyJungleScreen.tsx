@@ -1,51 +1,115 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useApp } from '../../contexts/AppContext'
-import { computeJungleEcosystem } from '../../engine/jungleEngine'
+import {
+  computeJungleEcosystem,
+  logJungleTransformation,
+  type UnlockableItem,
+  type TransformationEvent,
+} from '../../engine/jungleEngine'
 import { JungleSceneCanvas } from '../jungle/JungleSceneCanvas'
+import { UnlockCinematicModal } from '../jungle/UnlockCinematicModal'
 
 export function MyJungleScreen() {
-  const { state, motivationScore } = useApp()
-
-  const ecosystem = useMemo(() => {
+  const { state, motivationScore, addXP, addStars } = useApp()
+  const [selectedRarity, setSelectedRarity] = useState<string>('All')
+  const [celebrationItem, setCelebrationItem] = useState<UnlockableItem | null>(null)
+  const [transformationLogs, setTransformationLogs] = useState<TransformationEvent[]>(() => {
     return computeJungleEcosystem(
       state.stats,
       state.activityLog,
       state.speechScore,
       state.learnedCardIds,
       motivationScore
+    ).transformationHistory
+  })
+
+  const ecosystem = useMemo(() => {
+    const base = computeJungleEcosystem(
+      state.stats,
+      state.activityLog,
+      state.speechScore,
+      state.learnedCardIds,
+      motivationScore
     )
-  }, [state.stats, state.activityLog, state.speechScore, state.learnedCardIds, motivationScore])
+    return {
+      ...base,
+      transformationHistory: transformationLogs,
+    }
+  }, [state.stats, state.activityLog, state.speechScore, state.learnedCardIds, motivationScore, transformationLogs])
+
+  const handleSimulatedTrigger = (
+    type: string,
+    message: string,
+    xpEarned: number,
+    starsEarned: number,
+    healthChange: string
+  ) => {
+    // Add real state updates!
+    addXP(xpEarned)
+    addStars(starsEarned)
+
+    // Map trigger types to descriptive activity names
+    const activityNames: Record<string, string> = {
+      tree: 'Speech Practice Completed',
+      flower: 'Flash Cards Mastered',
+      butterfly: 'Matching Game Champion',
+      bird: 'Reward Video Enjoyed',
+      achievement: 'Major Achievement Unlocked',
+      streak: '7-Day Streak Active',
+      motivation: 'High Motivation Boost',
+    }
+
+    const updated = logJungleTransformation({
+      activity: activityNames[type] || 'Therapy Activity',
+      effect: message,
+      icon: type === 'tree' ? '🌳' : type === 'flower' ? '🌸' : type === 'butterfly' ? '🦋' : type === 'bird' ? '🦜' : type === 'achievement' ? '🏛️' : type === 'streak' ? '💦' : '🌈',
+      xpEarned,
+      starsEarned,
+      healthChange,
+    })
+
+    setTransformationLogs(updated)
+  }
+
+  // Filtered Species Collection based on selected rarity tier
+  const filteredUnlockables = useMemo(() => {
+    if (selectedRarity === 'All') return ecosystem.unlockables
+    return ecosystem.unlockables.filter((u) => u.rarity === selectedRarity)
+  }, [ecosystem.unlockables, selectedRarity])
 
   return (
     <div className="min-h-full bg-[#071610] text-white p-4 sm:p-6 lg:p-8 space-y-8 select-none">
+      {/* ── Cinematic Modal for Unlocked Wonders ── */}
+      <UnlockCinematicModal item={celebrationItem} onClose={() => setCelebrationItem(null)} />
+
       {/* ── Page Header ── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-emerald-950 via-[#0B251B] to-emerald-950 p-6 rounded-3xl border border-emerald-500/30 shadow-2xl relative overflow-hidden">
         <div className="space-y-1.5 z-10">
           <div className="flex items-center gap-2">
             <span className="bg-emerald-500/20 text-emerald-300 text-xs font-black px-3 py-1 rounded-full border border-emerald-500/30 uppercase tracking-widest">
-              🌳 Dynamic Therapy Visualizer
+              🌳 Living Therapy Ecosystem
             </span>
             <span className="bg-amber-500/20 text-amber-300 text-xs font-extrabold px-3 py-1 rounded-full border border-amber-500/30">
-              Level {ecosystem.ecosystemLevel} Forest
+              Stage: {ecosystem.ecosystemStageName} (Level {ecosystem.ecosystemLevel})
             </span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-3">
             Living Reinforcement Ecosystem
           </h1>
           <p className="text-emerald-200/80 text-xs sm:text-sm max-w-2xl leading-relaxed">
-            Instead of basic stars or numbers, every speech attempt, flashcard, and activity directly grows and transforms your child's personal magical jungle.
+            Instead of basic stars or numbers, every speech attempt, flashcard, and activity directly transforms your child's personal magical jungle.
           </p>
         </div>
 
-        {/* Top Quick Stats Badge */}
+        {/* Top Quick Stats Badges */}
         <div className="flex items-center gap-3 z-10 shrink-0">
           <div className="bg-emerald-900/50 border border-emerald-500/30 rounded-2xl p-3.5 text-center min-w-[90px]">
             <span className="text-xs font-extrabold text-emerald-300 block">Forest Age</span>
             <span className="text-xl sm:text-2xl font-black text-white">{ecosystem.forestAgeDays} Days</span>
           </div>
-          <div className="bg-emerald-900/50 border border-emerald-500/30 rounded-2xl p-3.5 text-center min-w-[90px]">
-            <span className="text-xs font-extrabold text-amber-300 block">Ecosystem</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-400">Lvl {ecosystem.ecosystemLevel}</span>
+          <div className="bg-emerald-900/50 border border-emerald-500/30 rounded-2xl p-3.5 text-center min-w-[110px]">
+            <span className="text-xs font-extrabold text-amber-300 block">Stage</span>
+            <span className="text-lg sm:text-xl font-black text-amber-400">{ecosystem.ecosystemStageName}</span>
           </div>
         </div>
 
@@ -54,7 +118,7 @@ export function MyJungleScreen() {
       </div>
 
       {/* ── Main Living Jungle Interactive Scene ── */}
-      <JungleSceneCanvas ecosystem={ecosystem} />
+      <JungleSceneCanvas ecosystem={ecosystem} onTriggerSimulated={handleSimulatedTrigger} />
 
       {/* ── AI Intelligence Cards Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -79,7 +143,7 @@ export function MyJungleScreen() {
 
           {/* Reasons List */}
           <div className="bg-emerald-900/30 border border-emerald-800/40 rounded-2xl p-4 space-y-2">
-            <span className="text-xs font-extrabold text-emerald-300 block uppercase tracking-wider">Health Factors & Reasons:</span>
+            <span className="text-xs font-extrabold text-emerald-300 block uppercase tracking-wider">Health Factors & Calculations:</span>
             <div className="space-y-1 text-xs font-semibold text-emerald-100/90">
               {ecosystem.healthReasons.map((reason, idx) => (
                 <div key={idx} className="flex items-center gap-2">
@@ -125,28 +189,29 @@ export function MyJungleScreen() {
             <div className="flex items-center gap-2.5">
               <span className="text-xl">📈</span>
               <div>
-                <span className="text-xs font-black text-emerald-300 block">Today's Ecosystem Transformation</span>
-                <span className="text-[11px] font-bold text-emerald-100">3 Speech Trees Grew & 12 Flowers Bloomed</span>
+                <span className="text-xs font-black text-emerald-300 block">Ecosystem Status</span>
+                <span className="text-[11px] font-bold text-emerald-100">
+                  {ecosystem.healthLevel} • Level {ecosystem.ecosystemLevel} ({ecosystem.ecosystemStageName})
+                </span>
               </div>
             </div>
             <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">
-              Active Growth
+              Persisted
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── 10 Ecosystem Metrics Grid ── */}
+      {/* ── Vital Ecosystem Metrics Grid ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-            <span>📊</span> Ecosystem Vital Metrics
+            <span>📊</span> Calculated Ecosystem Metrics
           </h2>
-          <span className="text-xs text-emerald-300 font-bold">10 Live Parameters</span>
+          <span className="text-xs text-emerald-300 font-bold">10 Live Calculated Parameters</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-          {/* 1. Health % */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Health Score</span>
@@ -156,17 +221,15 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">{ecosystem.healthLevel}</span>
           </div>
 
-          {/* 2. Level */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Ecosystem Level</span>
               <span>⭐</span>
             </div>
             <span className="text-2xl font-black text-amber-400">Lvl {ecosystem.ecosystemLevel}</span>
-            <span className="text-[10px] text-emerald-300/70 font-semibold">{state.stats.xp} Total XP</span>
+            <span className="text-[10px] text-emerald-300/70 font-semibold">{ecosystem.ecosystemStageName}</span>
           </div>
 
-          {/* 3. Forest Age */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Forest Age</span>
@@ -176,7 +239,6 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">{state.stats.dayStreak}-Day Active Streak</span>
           </div>
 
-          {/* 4. Total Trees */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Total Trees</span>
@@ -186,7 +248,6 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">From Speech Practice</span>
           </div>
 
-          {/* 5. Flowers Bloomed */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Flowers Bloomed</span>
@@ -196,7 +257,6 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">From Flash Cards</span>
           </div>
 
-          {/* 6. Animals Unlocked */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Animals Unlocked</span>
@@ -206,7 +266,6 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">Wildlife In Ecosystem</span>
           </div>
 
-          {/* 7. Waterfalls */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Waterfalls</span>
@@ -216,17 +275,15 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">Consistency Stream</span>
           </div>
 
-          {/* 8. Ancient Temples */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Ancient Temples</span>
               <span>🏛️</span>
             </div>
             <span className="text-2xl font-black text-amber-400">{ecosystem.ancientTemplesCount}</span>
-            <span className="text-[10px] text-emerald-300/70 font-semibold">Major Milestones</span>
+            <span className="text-[10px] text-emerald-300/70 font-semibold">Sacred Forest Level</span>
           </div>
 
-          {/* 9. Fireflies */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Starlight Fireflies</span>
@@ -236,41 +293,55 @@ export function MyJungleScreen() {
             <span className="text-[10px] text-emerald-300/70 font-semibold">From Stars Earned</span>
           </div>
 
-          {/* 10. Rare Species */}
           <div className="bg-emerald-950/60 border border-emerald-500/25 rounded-2xl p-4 flex flex-col justify-between space-y-2 hover:border-emerald-500/50 transition-all">
             <div className="flex items-center justify-between text-emerald-300 text-xs font-bold">
               <span>Rare Species</span>
               <span>🦚</span>
             </div>
             <span className="text-2xl font-black text-purple-300">{ecosystem.rareSpeciesCount}</span>
-            <span className="text-[10px] text-emerald-300/70 font-semibold">Mythic & Legendary</span>
+            <span className="text-[10px] text-emerald-300/70 font-semibold">Epic, Legendary, Mythic</span>
           </div>
         </div>
       </div>
 
-      {/* ── Unlockable Animals & Ecosystem Wonders (13 Features) ── */}
+      {/* ── Species & Wonders Collection (Filterable Rarity Tiers) ── */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-              <span>✨</span> Ecosystem Species & Magical Wonders
+              <span>✨</span> Ecosystem Species Collection & Rarity Tiers
             </h2>
             <p className="text-xs text-emerald-200/70 font-semibold">
-              Every species & wonder unlocks automatically as therapy milestones are reached.
+              Click any card to preview unlock celebrations. Unlocks persist in LocalStorage.
             </p>
           </div>
-          <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-            {ecosystem.unlockables.filter((u) => u.unlocked).length} / {ecosystem.unlockables.length} Unlocked
-          </span>
+
+          {/* Rarity Tier Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            {['All', 'Common', 'Rare', 'Epic', 'Legendary', 'Mythic'].map((tier) => (
+              <button
+                key={tier}
+                onClick={() => setSelectedRarity(tier)}
+                className={`px-3 py-1 rounded-xl text-xs font-extrabold cursor-pointer transition-all ${
+                  selectedRarity === tier
+                    ? 'bg-emerald-500 text-emerald-950 shadow-md'
+                    : 'bg-emerald-950/70 text-emerald-300/80 hover:bg-emerald-900/50'
+                }`}
+              >
+                {tier}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {ecosystem.unlockables.map((item) => (
+          {filteredUnlockables.map((item) => (
             <div
               key={item.id}
-              className={`p-4 rounded-3xl border transition-all flex flex-col justify-between space-y-3 relative overflow-hidden ${
+              onClick={() => item.unlocked && setCelebrationItem(item)}
+              className={`p-4 rounded-3xl border transition-all flex flex-col justify-between space-y-3 relative overflow-hidden cursor-pointer ${
                 item.unlocked
-                  ? 'bg-gradient-to-b from-emerald-950/80 to-[#0A2218] border-emerald-500/40 shadow-xl'
+                  ? 'bg-gradient-to-b from-emerald-950/80 to-[#0A2218] border-emerald-500/40 hover:scale-[1.02] shadow-xl'
                   : 'bg-emerald-950/30 border-emerald-900/30 opacity-60 grayscale'
               }`}
             >
@@ -293,6 +364,8 @@ export function MyJungleScreen() {
                           ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                           : item.rarity === 'Legendary'
                           ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          : item.rarity === 'Epic'
+                          ? 'bg-red-500/20 text-red-300 border-red-500/40'
                           : item.rarity === 'Rare'
                           ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
                           : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
@@ -336,13 +409,13 @@ export function MyJungleScreen() {
         </div>
       </div>
 
-      {/* ── Recent Ecosystem Transformations Feed ── */}
+      {/* ── Recent Ecosystem Transformations Timeline ── */}
       <div className="bg-gradient-to-br from-emerald-950/70 via-[#091F16] to-emerald-950/70 p-6 rounded-3xl border border-emerald-500/30 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-black tracking-wide text-white flex items-center gap-2">
-            <span>📜</span> Recent Transformation History
+            <span>📜</span> Transformation History & Recent Activity Log
           </h2>
-          <span className="text-xs font-bold text-emerald-400/80">Therapy Activity Log</span>
+          <span className="text-xs font-bold text-emerald-400/80">Persisted in LocalStorage</span>
         </div>
 
         <div className="space-y-2.5">
@@ -356,11 +429,19 @@ export function MyJungleScreen() {
                   {item.icon}
                 </div>
                 <div>
-                  <span className="font-extrabold text-white block">{item.trigger}</span>
+                  <span className="font-extrabold text-white block">{item.activity}</span>
                   <span className="text-emerald-300/80 font-medium">{item.effect}</span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-emerald-400/60 shrink-0">{item.time}</span>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                  +{item.xpEarned} XP
+                </span>
+                <span className="bg-amber-500/20 text-amber-300 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                  {item.healthChange} Health
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400/60">{item.timeAgo}</span>
+              </div>
             </div>
           ))}
         </div>
