@@ -7,6 +7,7 @@ interface SidebarProps {
 export function Sidebar({ activeNav, onNavChange, userLevel }: SidebarProps) {
   const navItems = [
     { id: 'Home', label: 'Home', icon: '🏠' },
+    { id: 'My Jungle', label: 'My Jungle', icon: '🌳' },
     { id: 'Speech Practice', label: 'Speech Practice', icon: '🎙️' },
     { id: 'Flash Cards', label: 'Flash Cards', icon: '🃏' },
     { id: 'Matching Games', label: 'Matching Games', icon: '🧩' },

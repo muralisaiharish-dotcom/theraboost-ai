@@ -20,6 +20,16 @@ const CHILD_TABS = [
     ),
   },
   {
+    id: 'My Jungle',
+    label: 'Jungle',
+    icon: (active: boolean) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? '#10B981' : 'none'}
+        stroke={active ? '#10B981' : '#9CA3AF'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L4 12h4v8h8v-8h4L12 2z" />
+      </svg>
+    ),
+  },
+  {
     id: 'Speech Practice',
     label: 'Practice',
     icon: (active: boolean) => (

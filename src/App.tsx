@@ -20,6 +20,7 @@ import { ProfileScreen } from './components/screens/ProfileScreen'
 import { SettingsScreen } from './components/screens/SettingsScreen'
 import { ParentDashboardScreen } from './components/screens/ParentDashboardScreen'
 import { MagicRewardScannerScreen } from './components/screens/MagicRewardScannerScreen'
+import { MyJungleScreen } from './components/screens/MyJungleScreen'
 
 function AppContent() {
   const { state: authState } = useAuth()
@@ -66,6 +67,8 @@ function AppContent() {
     switch (activeScreen) {
       case 'Home':
         return user.role === 'parent' ? <ParentDashboardScreen /> : <HomeScreen />
+      case 'My Jungle':
+        return <MyJungleScreen />
       case 'Speech Practice':
         return <SpeechScreen />
       case 'Flash Cards':
