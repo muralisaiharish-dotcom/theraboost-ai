@@ -210,3 +210,10 @@ body {
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 .animate-slideDownFade { animation: slideDownFade 0.25s ease-out both; }
+
+/* ── Toast slide-up from bottom ──────────────────────────────────────────── */
+@keyframes toastSlideUp {
+  from { transform: translateY(24px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-toastSlideUp { animation: toastSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }

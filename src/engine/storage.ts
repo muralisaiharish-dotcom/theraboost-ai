@@ -1,9 +1,10 @@
 // ─── Unified localStorage Storage Adapter ─────────────────────────────────────
-// All keys are namespaced under 'theraboost_' prefix.
+// All keys are namespaced under 'reinforce_' prefix.
 // This module is the single source of truth for all persistence.
 // To swap to Firebase: replace read/write implementations here only.
 
-const PREFIX = 'theraboost_'
+const PREFIX = 'reinforce_'
+const LEGACY_PREFIX = 'theraboost_'
 
 function key(name: string): string {
   return `${PREFIX}${name}`
@@ -12,8 +13,11 @@ function key(name: string): string {
 export function storageGet<T>(name: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key(name))
-    if (raw === null) return fallback
-    return JSON.parse(raw) as T
+    if (raw !== null) return JSON.parse(raw) as T
+    // Legacy fallback check
+    const legacyRaw = localStorage.getItem(`${LEGACY_PREFIX}${name}`)
+    if (legacyRaw !== null) return JSON.parse(legacyRaw) as T
+    return fallback
   } catch {
     return fallback
   }

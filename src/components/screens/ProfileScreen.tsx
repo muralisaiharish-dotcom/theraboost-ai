@@ -21,7 +21,7 @@ export function ProfileScreen() {
     setEditMode(false)
   }
 
-  const handleLogout = () => { logout() }
+  const handleLogout = async () => { await logout() }
 
   const menuItems = [
     { icon: '📊', label: 'My Progress', screen: 'My Progress' },
@@ -45,10 +45,19 @@ export function ProfileScreen() {
         {/* Avatar */}
         <div className="relative">
           <button
-            onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-            className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/40 flex items-center justify-center text-5xl cursor-pointer hover:scale-105 transition-transform shadow-lg"
+            onClick={() => !user.photoURL && setShowAvatarPicker(!showAvatarPicker)}
+            className="w-20 h-20 rounded-full bg-white/20 border-4 border-white/40 flex items-center justify-center text-5xl cursor-pointer hover:scale-105 transition-transform shadow-lg overflow-hidden"
           >
-            {user.avatar}
+            {user.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt={user.name}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : (
+              <span>{user.avatar}</span>
+            )}
           </button>
           <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-amber-400 rounded-full border-2 border-white flex items-center justify-center text-xs font-black text-white shadow-sm">
             {user.level}

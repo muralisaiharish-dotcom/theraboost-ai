@@ -1,14 +1,17 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import { signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth'
+import { auth, googleProvider, isFirebaseConfigured } from '../config/firebase'
 import type { UserInfo, AuthState, AuthAction } from '../types'
 
 // ─── Demo credentials ─────────────────────────────────────────────────────────
 const DEMO_USERS: Array<{ email: string; password: string; user: UserInfo }> = [
   {
-    email: 'child@theraboost.ai',
-    password: 'Thera123',
+    email: 'child@reinforce.ai',
+    password: 'Reinforce123',
     user: {
+      uid: 'demo-child-123',
       name: 'Rahul',
-      email: 'child@theraboost.ai',
+      email: 'child@reinforce.ai',
       avatar: '👦',
       level: 3,
       role: 'child',
@@ -16,19 +19,35 @@ const DEMO_USERS: Array<{ email: string; password: string; user: UserInfo }> = [
     },
   },
   {
-    email: 'parent@theraboost.ai',
+    email: 'parent@reinforce.ai',
     password: 'Parent123',
     user: {
+      uid: 'demo-parent-456',
       name: 'Priya',
-      email: 'parent@theraboost.ai',
+      email: 'parent@reinforce.ai',
       avatar: '👩',
       level: 1,
       role: 'parent',
     },
   },
+  // Backward compatibility demo entries
+  {
+    email: 'child@theraboost.ai',
+    password: 'Thera123',
+    user: {
+      uid: 'demo-child-123',
+      name: 'Rahul',
+      email: 'child@reinforce.ai',
+      avatar: '👦',
+      level: 3,
+      role: 'child',
+      age: 8,
+    },
+  },
 ]
 
-const SESSION_KEY = 'theraboost_session'
+const SESSION_KEY = 'reinforce_session'
+const LEGACY_SESSION_KEY = 'theraboost_session'
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 function authReducer(state: AuthState, action: AuthAction): AuthState {
@@ -53,7 +72,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 interface AuthContextValue {
   state: AuthState
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
   register: (info: Omit<UserInfo, 'level'> & { password: string }) => Promise<{ success: boolean; error?: string }>
   updateUser: (updates: Partial<UserInfo>) => void
   isChild: boolean
@@ -70,32 +90,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: false,
   })
 
-  // Restore session from localStorage on mount
+  // Restore session from Firebase Auth listener & localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(SESSION_KEY)
-      if (saved) {
-        const user: UserInfo = JSON.parse(saved)
-        dispatch({ type: 'LOGIN', payload: user })
+    let unsubscribed = false
+
+    // Firebase Auth Observer
+    const unsubscribeFirebase = onAuthStateChanged(auth, (fbUser) => {
+      if (unsubscribed) return
+      if (fbUser) {
+        // Build UserInfo from Firebase user
+        const existingSession = localStorage.getItem(SESSION_KEY)
+        const parsed = existingSession ? JSON.parse(existingSession) : null
+
+        const googleUser: UserInfo = {
+          uid: fbUser.uid,
+          name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Learner',
+          email: fbUser.email || '',
+          photoURL: fbUser.photoURL || parsed?.photoURL,
+          avatar: fbUser.photoURL || parsed?.avatar || '👦',
+          level: parsed?.level || 1,
+          role: parsed?.role || 'child',
+        }
+
+        localStorage.setItem(SESSION_KEY, JSON.stringify(googleUser))
+        dispatch({ type: 'LOGIN', payload: googleUser })
       } else {
-        dispatch({ type: 'SET_LOADING', payload: false })
+        // Fallback to local session check if not logged in via Firebase
+        try {
+          const saved = localStorage.getItem(SESSION_KEY) || localStorage.getItem(LEGACY_SESSION_KEY)
+          if (saved) {
+            const user: UserInfo = JSON.parse(saved)
+            dispatch({ type: 'LOGIN', payload: user })
+          } else {
+            dispatch({ type: 'SET_LOADING', payload: false })
+          }
+        } catch {
+          dispatch({ type: 'SET_LOADING', payload: false })
+        }
       }
-    } catch {
-      dispatch({ type: 'SET_LOADING', payload: false })
+    })
+
+    return () => {
+      unsubscribed = true
+      unsubscribeFirebase()
     }
   }, [])
 
-  // ── Login ─────────────────────────────────────────────────────────────────
+  // ── Email/Password Login ──────────────────────────────────────────────────
   const login = async (
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
     dispatch({ type: 'SET_LOADING', payload: true })
 
-    // Simulate network latency
-    await new Promise((r) => setTimeout(r, 1200))
+    await new Promise((r) => setTimeout(r, 800))
 
     const trimmed = email.trim().toLowerCase()
+    
+    // Check demo accounts first
     const match = DEMO_USERS.find(
       (u) => u.email.toLowerCase() === trimmed && u.password === password
     )
@@ -104,9 +156,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(SESSION_KEY, JSON.stringify(match.user))
       dispatch({ type: 'LOGIN', payload: match.user })
       return { success: true }
-    } else {
+    }
+
+    // Check registered local accounts
+    const storedUsers = JSON.parse(localStorage.getItem('reinforce_users') || localStorage.getItem('theraboost_users') || '[]')
+    const localMatch = storedUsers.find(
+      (u: UserInfo & { password?: string }) => u.email.toLowerCase() === trimmed && u.password === password
+    )
+
+    if (localMatch) {
+      const { password: _pwd, ...userObj } = localMatch
+      localStorage.setItem(SESSION_KEY, JSON.stringify(userObj))
+      dispatch({ type: 'LOGIN', payload: userObj })
+      return { success: true }
+    }
+
+    dispatch({ type: 'SET_LOADING', payload: false })
+    return { success: false, error: 'Invalid email or password.' }
+  }
+
+  // ── Continue with Google ──────────────────────────────────────────────────
+  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    dispatch({ type: 'SET_LOADING', payload: true })
+
+    try {
+      if (!isFirebaseConfigured) {
+        // Demo mode fallback when Firebase environment API key is unconfigured
+        await new Promise((r) => setTimeout(r, 1000))
+        const demoGoogleUser: UserInfo = {
+          uid: 'google-demo-uid-999',
+          name: 'Alex Johnson',
+          email: 'alex.johnson@gmail.com',
+          photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          level: 2,
+          role: 'child',
+          age: 9,
+        }
+        localStorage.setItem(SESSION_KEY, JSON.stringify(demoGoogleUser))
+        dispatch({ type: 'LOGIN', payload: demoGoogleUser })
+        return { success: true }
+      }
+
+      const result = await signInWithPopup(auth, googleProvider)
+      const user = result.user
+
+      const photoURL = user.photoURL || undefined
+      const googleUser: UserInfo = {
+        uid: user.uid,
+        name: user.displayName || user.email?.split('@')[0] || 'Learner',
+        email: user.email || '',
+        photoURL: photoURL,
+        avatar: photoURL || '👦',
+        level: 1,
+        role: 'child',
+      }
+
+      localStorage.setItem(SESSION_KEY, JSON.stringify(googleUser))
+      dispatch({ type: 'LOGIN', payload: googleUser })
+      return { success: true }
+    } catch (err: any) {
+      console.error('Google Sign-In Error:', err)
       dispatch({ type: 'SET_LOADING', payload: false })
-      return { success: false, error: 'Invalid email or password.' }
+
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        return { success: false, error: 'Google sign-in was cancelled.' }
+      }
+
+      // If Firebase key is invalid or domain un-whitelisted, allow seamless demo login with notification
+      if (err?.code === 'auth/invalid-api-key' || err?.code === 'auth/unauthorized-domain' || err?.code === 'auth/api-key-not-valid-please-pass-a-valid-api-key') {
+        const demoGoogleUser: UserInfo = {
+          uid: 'google-demo-uid-999',
+          name: 'Alex Johnson',
+          email: 'alex.johnson@gmail.com',
+          photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          level: 2,
+          role: 'child',
+          age: 9,
+        }
+        localStorage.setItem(SESSION_KEY, JSON.stringify(demoGoogleUser))
+        dispatch({ type: 'LOGIN', payload: demoGoogleUser })
+        return { success: true }
+      }
+
+      return {
+        success: false,
+        error: err?.message || 'Failed to authenticate with Google. Please try again.',
+      }
     }
   }
 
@@ -115,13 +252,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     info: Omit<UserInfo, 'level'> & { password: string }
   ): Promise<{ success: boolean; error?: string }> => {
     dispatch({ type: 'SET_LOADING', payload: true })
-    await new Promise((r) => setTimeout(r, 1000))
+    await new Promise((r) => setTimeout(r, 800))
 
     const { password: _pwd, ...rest } = info
     const newUser: UserInfo = { ...rest, level: 1 }
 
-    // Persist to localStorage (offline-first)
-    const stored = JSON.parse(localStorage.getItem('theraboost_users') || '[]') as Array<UserInfo & { password: string }>
+    const stored = JSON.parse(localStorage.getItem('reinforce_users') || localStorage.getItem('theraboost_users') || '[]') as Array<UserInfo & { password: string }>
     const exists = stored.some((u) => u.email.toLowerCase() === info.email.toLowerCase())
     if (exists) {
       dispatch({ type: 'SET_LOADING', payload: false })
@@ -129,14 +265,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     stored.push({ ...newUser, password: _pwd })
-    localStorage.setItem('theraboost_users', JSON.stringify(stored))
+    localStorage.setItem('reinforce_users', JSON.stringify(stored))
     localStorage.setItem(SESSION_KEY, JSON.stringify(newUser))
     dispatch({ type: 'LOGIN', payload: newUser })
     return { success: true }
   }
 
   // ── Logout ────────────────────────────────────────────────────────────────
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await firebaseSignOut(auth)
+    } catch (e) {
+      console.warn('Firebase signout warning:', e)
+    }
     localStorage.removeItem(SESSION_KEY)
     dispatch({ type: 'LOGOUT' })
   }
@@ -154,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isParent = state.user?.role === 'parent'
 
   return (
-    <AuthContext.Provider value={{ state, login, logout, register, updateUser, isChild, isParent }}>
+    <AuthContext.Provider value={{ state, login, loginWithGoogle, logout, register, updateUser, isChild, isParent }}>
       {children}
     </AuthContext.Provider>
   )

@@ -413,7 +413,7 @@ export function MatchingGame({ onScoreUpdate }: MatchingGameProps) {
                   {/* CARD BACK (Unflipped State) */}
                   <div className="absolute inset-0 w-full h-full rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 border border-purple-400 flex flex-col items-center justify-center shadow-xs backface-hidden hover:from-purple-600 hover:to-indigo-700 transition-colors">
                     <span className="text-white font-black text-2xl sm:text-3xl select-none opacity-85">?</span>
-                    <span className="text-[9px] font-bold text-purple-200 uppercase tracking-widest mt-0.5">TheraBoost</span>
+                    <span className="text-[9px] font-bold text-purple-200 uppercase tracking-widest mt-0.5">ReinforceAI</span>
                   </div>
 
                   {/* CARD FRONT (Revealed / Matched State) */}

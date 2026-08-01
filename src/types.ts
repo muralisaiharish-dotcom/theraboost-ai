@@ -32,9 +32,11 @@ export type UserRole = 'child' | 'parent'
  * Every component that displays the user's name/avatar must read from this.
  */
 export interface UserInfo {
+  uid?: string
   name: string
   email: string
-  avatar: string   // emoji avatar
+  avatar: string   // emoji avatar or fallback
+  photoURL?: string // Google profile picture URL
   level: number
   role: UserRole
   age?: number

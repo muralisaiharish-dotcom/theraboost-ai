@@ -30,6 +30,28 @@ function AppContent() {
     return <LoadingScreen onDone={() => setShowSplash(false)} />
   }
 
+  // ── Firebase Auth Loading State ──
+  // Show a full-page spinner while Firebase checks whether the user is already logged in.
+  if (authState.isLoading) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #2D1B69 50%, #1E1B4B 100%)' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-xl animate-pulse"
+            style={{ background: 'linear-gradient(135deg, #7C3AED, #a78bfa)' }}
+          >
+            ☁️
+          </div>
+          <svg className="animate-spin w-8 h-8 text-purple-400" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="60" strokeDashoffset="30" />
+          </svg>
+          <p className="text-purple-200 font-bold text-sm">Checking session...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Unauthenticated Responsive Auth Flow (Laptop & Mobile)
   if (!authState.isAuthenticated) {
     return <ResponsiveAuthScreen />

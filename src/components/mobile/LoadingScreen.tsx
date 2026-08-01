@@ -61,10 +61,10 @@ export function LoadingScreen({ onDone }: LoadingScreenProps) {
         {(phase === 'text' || phase === 'done') && (
           <div className="text-center animate-fadeIn">
             <div className="text-3xl font-black text-white tracking-tight">
-              TheraBoost <span className="text-purple-300">AI</span>
+              Reinforce<span className="text-purple-300">AI</span>
             </div>
             <div className="text-purple-300 text-sm font-semibold mt-1">
-              Speak • Practice • Shine ✨
+              AI-Powered Smart Reinforcement ✨
             </div>
           </div>
         )}

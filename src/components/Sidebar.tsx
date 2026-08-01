@@ -27,9 +27,9 @@ export function Sidebar({ activeNav, onNavChange, userLevel }: SidebarProps) {
           </div>
           <div>
             <span className="font-black text-base tracking-tight text-white block leading-none">
-              TheraBoost <span className="text-purple-400">AI</span>
+              Reinforce<span className="text-purple-400">AI</span>
             </span>
-            <span className="text-[10px] text-purple-300 font-bold block mt-0.5">Learn. Practice. Grow.</span>
+            <span className="text-[10px] text-purple-300 font-bold block mt-0.5">AI-Powered Smart Reinforcement</span>
           </div>
         </div>
 

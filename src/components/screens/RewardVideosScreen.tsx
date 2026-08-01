@@ -28,7 +28,7 @@ export function RewardVideosScreen() {
   // Persisted completed videos & watch progress
   const [completedVideoIds, setCompletedVideoIds] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('theraboost_completed_videos')
+      const saved = localStorage.getItem('reinforce_completed_videos') || localStorage.getItem('theraboost_completed_videos')
       return saved ? JSON.parse(saved) : []
     } catch {
       return []
@@ -37,7 +37,7 @@ export function RewardVideosScreen() {
 
   const [videoProgressMap, setVideoProgressMap] = useState<Record<string, number>>(() => {
     try {
-      const saved = localStorage.getItem('theraboost_video_progress')
+      const saved = localStorage.getItem('reinforce_video_progress') || localStorage.getItem('theraboost_video_progress')
       return saved ? JSON.parse(saved) : {}
     } catch {
       return {}
@@ -48,7 +48,7 @@ export function RewardVideosScreen() {
     setVideoProgressMap((prev) => {
       const next = { ...prev, [videoId]: Math.max(prev[videoId] || 0, progress) }
       try {
-        localStorage.setItem('theraboost_video_progress', JSON.stringify(next))
+        localStorage.setItem('reinforce_video_progress', JSON.stringify(next))
       } catch {}
       return next
     })
@@ -59,7 +59,7 @@ export function RewardVideosScreen() {
       const updated = [...completedVideoIds, video.id]
       setCompletedVideoIds(updated)
       try {
-        localStorage.setItem('theraboost_completed_videos', JSON.stringify(updated))
+        localStorage.setItem('reinforce_completed_videos', JSON.stringify(updated))
       } catch {}
 
       // Log reward event in central engine (dedup, stats, reward history)

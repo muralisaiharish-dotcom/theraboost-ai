@@ -11,7 +11,7 @@ interface MobileHeaderProps {
 }
 
 const SCREEN_TITLES: Record<string, string> = {
-  'Home': 'TheraBoost AI',
+  'Home': 'ReinforceAI',
   'Speech Practice': 'Speech Practice',
   'Flash Cards': 'Flash Cards',
   'Matching Games': 'Matching Games',
@@ -55,10 +55,10 @@ export function MobileHeader({
           </div>
           <div className="leading-none">
             <div className="text-sm font-black text-purple-900 leading-none">
-              TheraBoost <span className="text-purple-500">AI</span>
+              Reinforce<span className="text-purple-500">AI</span>
             </div>
             <div className="text-[9px] font-bold text-purple-400 mt-0.5">
-              {userRole === 'parent' ? 'Parent Dashboard' : 'Speak • Practice • Shine'}
+              {userRole === 'parent' ? 'Parent Dashboard' : 'Smart Reinforcement'}
             </div>
           </div>
         </div>

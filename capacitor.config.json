@@ -1,6 +1,6 @@
 {
-  "appId": "ai.theraboost.app",
-  "appName": "TheraBoost AI",
+  "appId": "ai.reinforce.app",
+  "appName": "ReinforceAI",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {

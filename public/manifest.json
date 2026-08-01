@@ -1,7 +1,7 @@
 {
-  "name": "TheraBoost AI — Learn, Practice & Grow",
-  "short_name": "TheraBoost",
-  "description": "AI-powered speech therapy, interactive flashcards, matching games, and personalized schedules for kids.",
+  "name": "ReinforceAI — AI-Powered Smart Reinforcement for Speech Therapy",
+  "short_name": "ReinforceAI",
+  "description": "AI-Powered Smart Reinforcement for Speech Therapy: interactive flashcards, matching games, and personalized schedules for kids.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1E1B4B",

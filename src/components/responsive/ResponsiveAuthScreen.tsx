@@ -4,13 +4,11 @@ import { LoginScreen } from '../auth/LoginScreen'
 import { LoginPage } from '../LoginPage'
 import { SignUpScreen } from '../auth/SignUpScreen'
 import { ForgotPasswordScreen } from '../auth/ForgotPasswordScreen'
-import { useAuth } from '../../contexts/AuthContext'
 
 type AuthFlowState = 'login' | 'signup' | 'forgot'
 
 export function ResponsiveAuthScreen() {
   const isMobile = useIsMobile(768)
-  const { login } = useAuth()
   const [authFlow, setAuthFlow] = useState<AuthFlowState>('login')
 
   if (isMobile) {
@@ -63,12 +61,13 @@ export function ResponsiveAuthScreen() {
     )
   }
 
+  // Desktop login — LoginPage handles auth internally via useAuth context
   return (
     <LoginPage
-      onLogin={(user) => {
-        // Authenticate via context
-        login(user.email, 'Thera123')
+      onLogin={() => {
+        // AuthContext handles state updates; no action needed here
       }}
     />
   )
 }
+

@@ -36,7 +36,7 @@ export function Home({ onNavigate, userName }: HomeProps) {
             <span className="text-purple-700">is a step forward!</span>
           </h2>
           <p className="text-xs text-gray-600 font-semibold mb-4 flex items-center gap-2">
-            Practice, play and learn with TheraBoost AI
+            Practice, play and learn with ReinforceAI
             <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-purple-200/60 text-purple-800 text-[10px] font-black">
               🎙️ |||•|||
             </span>

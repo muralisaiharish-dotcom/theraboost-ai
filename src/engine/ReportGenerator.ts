@@ -39,7 +39,7 @@ export function generatePrintableHTML(data: ReportData): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TheraBoost AI — ${reportType} Report — ${childName}</title>
+  <title>ReinforceAI — ${reportType} Report — ${childName}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e1b4b; background: #fff; padding: 32px; }
@@ -86,7 +86,7 @@ export function generatePrintableHTML(data: ReportData): string {
     <div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
         <span style="font-size:28px">☁️</span>
-        <h1>TheraBoost AI</h1>
+        <h1>ReinforceAI</h1>
       </div>
       <p style="font-size:13px;color:#6b7280;font-weight:600;">${reportType} Progress Report — ${childName}</p>
     </div>
@@ -237,7 +237,7 @@ export function generatePrintableHTML(data: ReportData): string {
 
   <!-- Footer -->
   <div class="footer">
-    TheraBoost AI — Smart Reinforcement Application | Generated on ${generatedDate} | Confidential — For Parent/Therapist Use Only
+    ReinforceAI — AI-Powered Smart Reinforcement for Speech Therapy | Generated on ${generatedDate} | Confidential — For Parent/Therapist Use Only
   </div>
 </body>
 </html>

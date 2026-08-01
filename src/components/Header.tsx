@@ -44,11 +44,11 @@ export function Header({ starsEarned, sessionProgress, onOpenSettings, userName,
         </div>
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1 leading-none">
-            <span className="text-xl font-black text-purple-900 tracking-tight">TheraBoost</span>
+            <span className="text-xl font-black text-purple-900 tracking-tight">Reinforce</span>
             <span className="text-xl font-black text-indigo-600">AI</span>
           </div>
           <span className="text-[10px] font-extrabold text-purple-400 tracking-wide mt-0.5">
-            Speak. Practice. Shine.
+            AI-Powered Smart Reinforcement for Speech Therapy
           </span>
         </div>
       </div>
@@ -57,7 +57,16 @@ export function Header({ starsEarned, sessionProgress, onOpenSettings, userName,
       <div className="flex items-center gap-3 bg-purple-50/70 border border-purple-100 px-4 py-1.5 rounded-full">
         <div className="relative w-9 h-9 rounded-full bg-gradient-to-tr from-purple-400 to-pink-400 p-0.5 shadow-sm">
           <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-            <span className="text-lg">{userAvatar}</span>
+            {userAvatar && (userAvatar.startsWith('http') || userAvatar.startsWith('data:')) ? (
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-full h-full object-cover rounded-full"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : (
+              <span className="text-lg">{userAvatar || '👦'}</span>
+            )}
           </div>
           <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
         </div>

@@ -87,7 +87,7 @@ export function HomeScreen() {
             <span className="text-purple-700">is a step forward!</span>
           </h2>
           <p className="text-xs text-gray-500 font-semibold mt-1 mb-3">
-            Practice, play and learn with TheraBoost AI
+            Practice, play and learn with ReinforceAI
           </p>
           <button
             onClick={() => navigate('Speech Practice')}

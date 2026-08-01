@@ -89,7 +89,7 @@ export function SignUpScreen({ onNavigateLogin }: SignUpScreenProps) {
         </button>
         <div>
           <h1 className="text-lg font-black text-gray-900">Create Account</h1>
-          <p className="text-xs font-semibold text-gray-500">Join TheraBoost AI today!</p>
+          <p className="text-xs font-semibold text-gray-500">Join ReinforceAI today!</p>
         </div>
       </div>
 

@@ -150,7 +150,7 @@ export function SettingsScreen() {
 
       {/* App Info */}
       <div className="text-center text-[10px] font-semibold text-gray-400 mt-2">
-        TheraBoost AI Mobile v1.0.0 PWA<br />
+        ReinforceAI v1.0.0 PWA<br />
         Logged in as {user.email}
       </div>
 
@@ -203,9 +203,9 @@ export function SettingsScreen() {
                 Cancel
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowDeleteModal(false)
-                  logout()
+                  await logout()
                 }}
                 className="flex-1 py-2 rounded-xl bg-red-600 text-white text-xs font-bold shadow-xs cursor-pointer"
               >
