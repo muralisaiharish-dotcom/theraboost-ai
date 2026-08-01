@@ -35,11 +35,12 @@ export function HomeRightPanel({ stats }: HomeRightPanelProps) {
 
       <aside className="w-80 flex flex-col gap-4 shrink-0 h-full overflow-y-auto pr-1 select-none">
         {/* ── Motivation Index Widget ── */}
-        <MotivationScoreCard compact />
+        <div className="shrink-0">
+          <MotivationScoreCard compact />
+        </div>
 
         {/* ── 1. Daily Streak Widget ──────────────────────────────────────── */}
-
-        <div className="bg-white rounded-3xl p-5 border border-purple-100 shadow-xs relative overflow-hidden">
+        <div className="bg-white rounded-3xl p-5 border border-purple-100 shadow-xs relative shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-lg">🔥</span>
@@ -98,7 +99,7 @@ export function HomeRightPanel({ stats }: HomeRightPanelProps) {
         <button
           id="todays-goal-card"
           onClick={() => setGoalOpen(true)}
-          className="w-full text-left bg-white rounded-3xl p-5 border border-purple-100 shadow-xs hover:shadow-md hover:border-purple-300 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+          className="w-full text-left bg-white rounded-3xl p-5 border border-purple-100 shadow-xs hover:shadow-md hover:border-purple-300 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] shrink-0"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -140,7 +141,7 @@ export function HomeRightPanel({ stats }: HomeRightPanelProps) {
         <button
           id="tip-for-you-card"
           onClick={() => setTipOpen(true)}
-          className="w-full text-left bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 rounded-3xl p-5 border border-blue-100 shadow-xs relative overflow-hidden hover:shadow-md hover:border-purple-200 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+          className="w-full text-left bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-50 rounded-3xl p-5 border border-blue-100 shadow-xs relative overflow-hidden hover:shadow-md hover:border-purple-200 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] shrink-0"
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">💡</span>

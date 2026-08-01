@@ -95,7 +95,7 @@ export function ResponsiveShell({ children }: ResponsiveShellProps) {
 
         {/* Right Sidebar Panel */}
         {showRightPanel && (
-          <div className="py-5 pr-5 shrink-0 hidden lg:block">
+          <div className="py-5 pr-5 shrink-0 hidden lg:block h-full min-h-0">
             {renderRightPanel()}
           </div>
         )}
